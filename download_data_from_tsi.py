@@ -170,7 +170,7 @@ def main_download(country : str = None):
     print(f'Downloading {country.upper()} data for {this_month}-{month_part}')
 
     #set the path of the correct folder
-    cwd = "/home/dhawal/Air Quality Analysis Central Asia/Central Asian Data Center"
+    cwd = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center"
 
     #getting the client id and secret
     with open(f'{cwd}/config.json') as config_file:

@@ -21,8 +21,8 @@ def get_credentials():
     # created automatically when the authorization flow completes for the first
     # time.
 
-    token_path = "/home/dhawal/Air Quality Analysis Central Asia/Central Asian Data Center/credentials/token_gmail.json"
-    cred_path = "/home/dhawal/Air Quality Analysis Central Asia/Central Asian Data Center/credentials/AQsensor_Google_Gmail_API_Credentials.json"
+    token_path = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center/credentials/token_gmail.json"
+    cred_path = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center/credentials/AQsensor_Google_Gmail_API_Credentials.json"
 
     if os.path.exists(token_path):
         creds = Credentials.from_authorized_user_file(token_path, SCOPES)
@@ -43,7 +43,7 @@ def get_credentials():
 
 
 
-def send_confirmation_email():
+def send_email(message_text : str):
     """Create and send an email message
     Print the returned  message id
     Returns: Message object, including message id
@@ -58,23 +58,12 @@ def send_confirmation_email():
         service = build("gmail", "v1", credentials=creds)
         message = EmailMessage()
 
-        day1 = pd.Timestamp.today() - pd.Timedelta(days=16); day1 = day1.strftime("%d-%b-%Y")
-        day2 = pd.Timestamp.today().strftime("%d-%b-%Y")
-
-        message_text = f"""
-            <p>Dear Members of the NU Air Quality Project</p>
-
-            <p>Please be informed that the data for Air Quality Sensors in Kazakhstan, Kyrgyzstan and Uzbekistan were downloaded for the period of {day1} and {day2}. All the data are available at the <a href="https://drive.google.com/drive/folders/12YDIO1ya_bIxyFifYfnBq7dU-64WoqjX?usp=sharing"> NU Data Center</a> folder in Google Drive.</p>
-
-            <p>Best,</p>
-        """
-
         message.add_header('Content-Type','text/html')
         message.set_payload(message_text)
 
         message["To"] = ["dhawal.shah@nu.edu.kz","sakengali.kazhiyev@nu.edu.kz"]
         message["From"] = "aqsensor@nu.edu.kz"
-        message["Subject"] = "Data Upload Confirmation"
+        message["Subject"] = "Data Upload Upload"
         
 
         # encoded message
@@ -93,6 +82,32 @@ def send_confirmation_email():
         print(f"An error occurred: {error}")
         send_message = None
     return send_message
+
+
+
+def send_email_main(is_successful : bool = True, error : str = ''):
+
+    day1 = pd.Timestamp.today() - pd.Timedelta(days=16); day1 = day1.strftime("%d-%b-%Y")
+    day2 = pd.Timestamp.today().strftime("%d-%b-%Y")
+
+    if is_successful:
+        message_text = f"""
+            <p>Dear Members of the NU Air Quality Project</p>
+
+            <p>Please be informed that the data for Air Quality Sensors in Kazakhstan, Kyrgyzstan and Uzbekistan were downloaded for the period of {day1} and {day2}. All the data are available at the <a href="https://drive.google.com/drive/folders/12YDIO1ya_bIxyFifYfnBq7dU-64WoqjX?usp=sharing"> NU Data Center</a> folder in Google Drive.</p>
+
+            <p>Best,</p>
+        """    
+    else:
+        message_text = f"""
+            <p>Dear Members of the NU Air Quality Project</p>
+
+            <p>Please be informed that the data for Air Quality Sensors in Kazakhstan, Kyrgyzstan and Uzbekistan <b> were failed to download </b> for the period of {day1} and {day2}.<br> The error is <i>{error}</i>.</p>
+
+            <p>Best,</p>
+        """
+    send_email(message_text=message_text)
+
 
 
 

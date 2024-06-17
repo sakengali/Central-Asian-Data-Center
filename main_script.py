@@ -1,6 +1,6 @@
 from download_data_from_tsi import main_download
 from upload_data_to_drive import main_upload
-from send_confirmation_email import send_confirmation_email
+from send_confirmation_email import send_email_main
 
 import pandas as pd
 
@@ -27,14 +27,20 @@ def upload_data():
 def main():
     if month == 1: # february
         if today == 15 or today == 28:
-            download_data()
-            upload_data()
-            send_confirmation_email()
+            try:
+                download_data()
+                upload_data()
+                send_email_main()
+            except Exception as error:
+                send_email_main(is_successful=True, error=error)
     else:           # all other months
         if today == 17 or today == 30:
-            download_data()
-            upload_data()
-            send_confirmation_email()
+            try:
+                download_data()
+                upload_data()
+                send_email_main()
+            except Exception as error:
+                send_email_main(is_successful=False, error=error)
 
 if __name__ == "__main__":
     main()

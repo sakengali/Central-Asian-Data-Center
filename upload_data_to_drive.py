@@ -26,8 +26,8 @@ def get_credentials():
     # The file token.json stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
-    token_path = "/home/dhawal/Air Quality Analysis Central Asia/Central Asian Data Center/credentials/token_drive.json"
-    cred_path = "/home/dhawal/Air Quality Analysis Central Asia/Central Asian Data Center/credentials/AQsensor_Google_Drive_API_Credentials.json"
+    token_path = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center/credentials/token_drive.json"
+    cred_path = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center/credentials/AQsensor_Google_Drive_API_Credentials.json"
     if os.path.exists(token_path):
         creds = Credentials.from_authorized_user_file(token_path, SCOPES)
     # If there are no (valid) credentials available, let the user log in.
@@ -194,7 +194,7 @@ def main_upload():
     folder_ids = create_folders(creds)
     
     # upload data
-    cwd = "/home/dhawal/Air Quality Analysis Central Asia/Central Asian Data Center"
+    cwd = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center"
     for country in ['KZ', 'KG', 'UZ']:
         print(f'\nUploading data for {country}')
         upload_data_for(creds, "KZ", cwd, *folder_ids[country])
