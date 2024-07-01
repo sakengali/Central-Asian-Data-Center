@@ -1,6 +1,7 @@
 import os
 from typing import List
 import pandas as pd
+from tqdm import tqdm
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -177,16 +178,18 @@ def upload_data_for(creds, country : str, cwd : str, indoor_folder_id : str, out
     # uploading data for indoor sensors
     os.chdir(f"{cwd}/Central Asian Data/{country.upper()}/{level_folder}/{date_folder_name}/{indoor_folder_name}")
     print('Uploading indoor data')
-    for file_name in os.listdir():
-        upload_file_to_folder(creds, file_name, parent_folder_ids=[indoor_folder_id])
-        print(f'Uploaded {file_name}')
+    with tqdm(os.listdir()) as t:
+        for file_name in t:
+            t.set_description(f"Uploading {file_name}")
+            upload_file_to_folder(creds, file_name, parent_folder_ids=[indoor_folder_id])
 
     # uplodaing data for outdoor sensors
     os.chdir(f"{cwd}/Central Asian Data/{country.upper()}/{level_folder}/{date_folder_name}/{outdoor_folder_name}")
     print('Uploading outdoor data')
-    for file_name in os.listdir():
-        upload_file_to_folder(creds, file_name, parent_folder_ids=[outdoor_folder_id])
-        print(f'Uploaded {file_name}')
+    with tqdm(os.listdir()) as t:
+        for file_name in t:
+            t.set_description(f"Uploading {file_name}")
+            upload_file_to_folder(creds, file_name, parent_folder_ids=[indoor_folder_id])
 
     return None
 

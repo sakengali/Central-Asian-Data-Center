@@ -105,7 +105,7 @@ def get_sensor_data(device_id : str, device_name : str, is_indoor=True, headers 
 
         sensor_dataframe = sensor_dataframe.set_index('Timestamp')
         sensor_dataframe.to_csv(f'{this_month}-{month_part}/Indoor Sensors/{device_name}-{this_month}.csv')
-        print(f"Downloaded data for {device_name}")
+        #print(f"Downloaded data for {device_name}")
     else:
         columns = ['Timestamp', 'Serial', 'Latitude', 'Longitude', 'PM 2.5', 'PM 2.5 AQI', 'Temperature', 'Relative Humidity']
 
@@ -125,7 +125,7 @@ def get_sensor_data(device_id : str, device_name : str, is_indoor=True, headers 
 
         sensor_dataframe = sensor_dataframe.set_index('Timestamp')
         sensor_dataframe.to_csv(f'{this_month}-{month_part}/Outdoor Sensors/{device_name}-{this_month}.csv')
-        print(f"Downloaded data for {device_name}")
+        #print(f"Downloaded data for {device_name}")
 
 
 
@@ -134,12 +134,15 @@ def save_sensors_data(device_list : dict, is_indoor : bool = True, headers : Dic
     """ save data of the sensors to csv in a folder """
 
     if is_indoor:
-        for device_name, device_id in tqdm(device_list['Indoor'].items(), desc='Downloading data for indoor sensors'):
-            get_sensor_data(device_name=device_name, device_id=device_id, is_indoor=True, headers=headers)
+        with tqdm(device_list['Indoor'].items()) as t:
+            for device_name, device_id in t:
+                t.set_description(f"Downloading data for {device_name}")
+                get_sensor_data(device_name=device_name, device_id=device_id, is_indoor=True, headers=headers)
     else:
-        for device_name, device_id in tqdm(device_list['Outdoor'].items(), desc='Downloading data for outdoor sensors'):
-            get_sensor_data(device_name=device_name, device_id=device_id, is_indoor=False, headers=headers)
-
+        with tqdm(device_list['Outdoor'].items()) as t:
+            for device_name, device_id in t:
+                t.set_description(f"Downloading data for {device_name}")
+                get_sensor_data(device_name=device_name, device_id=device_id, is_indoor=True, headers=headers)
 
 
 
@@ -171,7 +174,7 @@ def main_download(country : str = None):
 
     #set the path of the correct folder
     cwd = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center"
-    
+
     #getting the client id and secret
     with open(f'{cwd}/config.json') as config_file:
         config = json.load(config_file)
