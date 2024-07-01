@@ -171,7 +171,7 @@ def main_download(country : str = None):
 
     #set the path of the correct folder
     cwd = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center"
-
+    
     #getting the client id and secret
     with open(f'{cwd}/config.json') as config_file:
         config = json.load(config_file)

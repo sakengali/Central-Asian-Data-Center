@@ -13,6 +13,9 @@ from googleapiclient.http import MediaFileUpload
 Uploads newly downloaded data of KZ, KG and UZ to corresponding folders in Google Drive.
 """
 
+#set the path of the correct folder
+cwd = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center"
+
 def get_credentials():
     """ 
     Process: obtains credentials from the saved token file
@@ -26,8 +29,8 @@ def get_credentials():
     # The file token.json stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
-    token_path = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center/credentials/token_drive.json"
-    cred_path = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center/credentials/AQsensor_Google_Drive_API_Credentials.json"
+    token_path = f"{cwd}/credentials/token_drive.json"
+    cred_path = f"{cwd}/credentials/AQsensor_Google_Drive_API_Credentials.json"
     if os.path.exists(token_path):
         creds = Credentials.from_authorized_user_file(token_path, SCOPES)
     # If there are no (valid) credentials available, let the user log in.
@@ -80,10 +83,11 @@ def upload_file_to_folder(creds, file_name : str, parent_folder_ids : List[str])
     file_metadata = {
         'name' : file_name,
         'parents' : parent_folder_ids,
-        'mimeType' : 'text/csv'
+        'mimeType' : 'text/csv',
     }
 
     file = (service.files().create(body=file_metadata,
+                                   media_body=file_name,
                                     fields='id').execute())
 
     return file.get('id')
@@ -194,12 +198,9 @@ def main_upload():
     folder_ids = create_folders(creds)
     
     # upload data
-    cwd = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center"
     for country in ['KZ', 'KG', 'UZ']:
         print(f'\nUploading data for {country}')
-        upload_data_for(creds, "KZ", cwd, *folder_ids[country])
-
-
+        upload_data_for(creds, country, cwd, *folder_ids[country])
 
 
 if __name__ == "__main__":

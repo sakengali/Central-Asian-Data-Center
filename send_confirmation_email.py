@@ -9,6 +9,9 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 
+#set the path of the correct folder
+cwd = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center"
+
 def get_credentials():
     """Shows basic usage of the Gmail API.
     Lists the user's Gmail labels.
@@ -21,8 +24,8 @@ def get_credentials():
     # created automatically when the authorization flow completes for the first
     # time.
 
-    token_path = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center/credentials/token_gmail.json"
-    cred_path = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center/credentials/AQsensor_Google_Gmail_API_Credentials.json"
+    token_path = f"{cwd}/credentials/token_gmail.json"
+    cred_path = f"{cwd}/credentials/AQsensor_Google_Gmail_API_Credentials.json"
 
     if os.path.exists(token_path):
         creds = Credentials.from_authorized_user_file(token_path, SCOPES)
