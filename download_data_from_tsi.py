@@ -170,8 +170,7 @@ def main_download(country : str = None):
     assert country.lower() in ['kz', 'kg', 'uz'], "country code should be either 'kz', 'kg', or 'uz' "
 
     # getting the date information
-    this_month = pd.Timestamp.today().strftime("%b-%Y")
-    month_part = '1' if pd.Timestamp.today().day <= 16 else '2'
+    this_month, month_part = get_date()
     print()
     print(f'Downloading {country.upper()} data for {this_month}-{month_part}')
 
