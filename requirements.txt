@@ -1,0 +1,6 @@
+google_api_python_client==2.131.0
+google_auth_oauthlib==1.2.0
+numpy==1.24.4
+pandas==1.4.2
+requests==2.32.3
+tqdm==4.64.1
