@@ -38,6 +38,11 @@ def get_access_token(country : str, config : Dict[str, str]) -> str:
     return access_token
 
 
+def get_date() -> tuple:
+    this_month = pd.Timestamp.today().strftime("%b-%Y")
+    month_part = '1' if pd.Timestamp.today().day <= 16 else '2'
+
+    return this_month, month_part 
 
 
 def get_device_list(is_indoor: bool = True, headers : Dict[str, str] = {}):
@@ -68,8 +73,7 @@ def get_sensor_data(device_id : str, device_name : str, is_indoor=True, headers 
     assert device_id and device_name, 'device_id and device_name are required'
 
     #getting the date information
-    this_month = pd.Timestamp.today().strftime("%b-%Y")
-    month_part = '1' if pd.Timestamp.today().day <= 16 else '2'
+    this_month, month_part = get_date()
 
     url =  'https://api-prd.tsilink.com/api/v3/external/telemetry/flat-format'
 
@@ -142,7 +146,7 @@ def save_sensors_data(device_list : dict, is_indoor : bool = True, headers : Dic
         with tqdm(device_list['Outdoor'].items()) as t:
             for device_name, device_id in t:
                 t.set_description(f"Downloading data for {device_name}")
-                get_sensor_data(device_name=device_name, device_id=device_id, is_indoor=True, headers=headers)
+                get_sensor_data(device_name=device_name, device_id=device_id, is_indoor=False, headers=headers)
 
 
 
@@ -150,8 +154,7 @@ def create_folders() -> None:
     """ create necessary folders to store the data of this month """
 
     # getting the date information
-    this_month = pd.Timestamp.today().strftime("%b-%Y")
-    month_part = '1' if pd.Timestamp.today().day <= 16 else '2'
+    this_month, month_part = get_date()
 
     if not os.path.isdir(f'./{this_month}-{month_part}'):
         os.makedirs(f'./{this_month}-{month_part}/Indoor Sensors')
