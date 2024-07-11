@@ -32,7 +32,7 @@ def main():
                 upload_data()
                 send_email_main()
             except Exception as error:
-                send_email_main(is_successful=True, error=error)
+                send_email_main(is_successful=False, error=error)
     else:           # all other months
         if today == 17 or today == 30:
             try:

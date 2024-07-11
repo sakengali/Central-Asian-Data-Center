@@ -10,7 +10,7 @@ from googleapiclient.errors import HttpError
 
 
 #set the path of the correct folder
-cwd = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center"
+cwd = os.getcwd()
 
 def get_credentials():
     """Shows basic usage of the Gmail API.

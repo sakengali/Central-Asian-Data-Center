@@ -19,6 +19,9 @@ from tqdm import tqdm
 
 """
 
+#set the path of the correct folder
+cwd = os.getcwd()
+
 def get_access_token(country : str, config : Dict[str, str]) -> str:
 
     """ Input: country code, config dictionary with client ids and secrets of countries\
@@ -138,27 +141,36 @@ def save_sensors_data(device_list : dict, is_indoor : bool = True, headers : Dic
     """ save data of the sensors to csv in a folder """
 
     if is_indoor:
+        print("Downloading data for Indoor sensors")
         with tqdm(device_list['Indoor'].items()) as t:
             for device_name, device_id in t:
-                t.set_description(f"Downloading data for {device_name}")
+                t.set_description(device_name)
                 get_sensor_data(device_name=device_name, device_id=device_id, is_indoor=True, headers=headers)
     else:
+        print("Downloading data for Outdoor sensors")
         with tqdm(device_list['Outdoor'].items()) as t:
             for device_name, device_id in t:
-                t.set_description(f"Downloading data for {device_name}")
+                t.set_description(device_name)
                 get_sensor_data(device_name=device_name, device_id=device_id, is_indoor=False, headers=headers)
 
 
 
-def create_folders() -> None:
+def create_folders(cwd, country) -> None:
     """ create necessary folders to store the data of this month """
 
     # getting the date information
     this_month, month_part = get_date()
 
-    if not os.path.isdir(f'./{this_month}-{month_part}'):
-        os.makedirs(f'./{this_month}-{month_part}/Indoor Sensors')
-        os.makedirs(f'./{this_month}-{month_part}/Outdoor Sensors')
+    #create the main folder for data storage
+    if not os.path.isdir(f'{cwd}/Central Asian Data/{country}'):
+        print(f"Creating the necessary folders for data storage")
+
+        os.makedirs(f'{cwd}/Central Asian Data/{country}/Level 0/{this_month}-{month_part}/Indoor Sensors')
+        os.makedirs(f'{cwd}/Central Asian Data/{country}/Level 0/{this_month}-{month_part}/Outdoor Sensors')
+
+    else:
+        print("Folders for data storage were found.")
+
 
 
 
@@ -174,9 +186,6 @@ def main_download(country : str = None):
     print()
     print(f'Downloading {country.upper()} data for {this_month}-{month_part}')
 
-    #set the path of the correct folder
-    cwd = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center"
-
     #getting the client id and secret
     with open(f'{cwd}/config.json') as config_file:
         config = json.load(config_file)
@@ -191,10 +200,10 @@ def main_download(country : str = None):
     #level information
     level_folder = "Level 0"
 
+    create_folders(cwd, country)
+
     #change directory to the country's
     os.chdir(f"{cwd}/Central Asian Data/{country.upper()}/{level_folder}")
-
-    create_folders()
 
     # save data for indoor sensors 
     save_sensors_data(
