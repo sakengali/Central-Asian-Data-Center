@@ -75,16 +75,21 @@ def create_folder_in_folder(creds, folder_name : str, parent_folder_ids : List[s
 
 def upload_file_to_folder(creds, file_name : str, parent_folder_ids : List[str]):
     """
-    Creates a folder inside a parent's folder
-    Returns: folder_id
+    Upload a file to the parent folderS
+    Returns: file id
     """
     
     service = build("drive", "v3", credentials=creds)
 
+    if file_name[-3:] == 'csv':
+        mime_type = 'text/csv'
+    elif file_name[-3:] == 'txt':
+        mime_type = 'text/plain'
+
     file_metadata = {
         'name' : file_name,
         'parents' : parent_folder_ids,
-        'mimeType' : 'text/csv',
+        'mimeType' : mime_type,
     }
 
     file = (service.files().create(body=file_metadata,
@@ -130,6 +135,12 @@ def create_folders(creds):
     kz_date_folder_id = create_folder_in_folder(creds, date_folder_name, [kz_level0_folder_id])
     kg_date_folder_id = create_folder_in_folder(creds, date_folder_name, [kg_level0_folder_id])
     uz_date_folder_id = create_folder_in_folder(creds, date_folder_name, [uz_level0_folder_id])
+
+    data_folder_ids = {
+        'KZ' : kz_date_folder_id,
+        'KG' : kg_date_folder_id,
+        'UZ' : uz_date_folder_id,
+    }
     
     print(f"created date folder for KZ, id: {kz_date_folder_id}")
     print(f"created date folder for KG, id: {kg_date_folder_id}")
@@ -163,9 +174,11 @@ def create_folders(creds):
         'UZ' : (uz_indoor_folder_id, uz_outdoor_folder_id),    
     }
 
-    return folder_ids
 
-def upload_data_for(creds, country : str, cwd : str, indoor_folder_id : str, outdoor_folder_id : str):
+
+    return data_folder_ids, folder_ids
+
+def upload_data_for(creds, country : str, indoor_folder_id : str, outdoor_folder_id : str):
     """
     
     """
@@ -193,18 +206,39 @@ def upload_data_for(creds, country : str, cwd : str, indoor_folder_id : str, out
 
     return None
 
+def upload_info_file(creds, country : str, date_folder_id : str):
+    """
+    uploads info.txt file to the date folder
+    """
+
+    level_folder = "Level 0"
+    date_folder_name = get_date_folder_name()
+
+    os.chdir(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}")
+    upload_file_to_folder(creds, "info.txt", parent_folder_ids=[date_folder_id])
+
+    return None
+
 
 def main_upload():
     creds = get_credentials()
 
     # create date and indoor/outdoor folders
-    folder_ids = create_folders(creds)
+    date_folder_ids, folder_ids = create_folders(creds)
     
-    # upload data
+    # upload
     for country in ['KZ', 'KG', 'UZ']:
-        print(f'\nUploading data for {country}')
-        upload_data_for(creds, country, cwd, *folder_ids[country])
 
+        try:
+            # upload data
+            print(f'\nUploading data for {country}')
+            upload_data_for(creds, country, *folder_ids[country])
+
+            # upload info.txt file
+            print(f'Uploading info.txt file for {country}')
+            upload_info_file(creds, country, date_folder_ids[country])
+        except FileNotFoundError as e:
+            print(f"Couldn't upload data for {country}. Error: {e}")
 
 if __name__ == "__main__":
     main_upload()

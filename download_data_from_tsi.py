@@ -162,7 +162,7 @@ def create_folders(cwd, country) -> None:
     this_month, month_part = get_date()
 
     #create the main folder for data storage
-    if not os.path.isdir(f'{cwd}/Central Asian Data/{country}'):
+    if not os.path.isdir(f'{cwd}/Central Asian Data/{country}/Level 0/{this_month}-{month_part}'):
         print(f"Creating the necessary folders for data storage")
 
         os.makedirs(f'{cwd}/Central Asian Data/{country}/Level 0/{this_month}-{month_part}/Indoor Sensors')

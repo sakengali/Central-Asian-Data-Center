@@ -1,6 +1,7 @@
 from download_data_from_tsi import main_download
 from upload_data_to_drive import main_upload
 from send_confirmation_email import send_email_main
+from helpers import create_info_file
 
 import pandas as pd
 
@@ -29,6 +30,7 @@ def main():
         if today == 15 or today == 28:
             try:
                 download_data()
+                create_info_file()
                 upload_data()
                 send_email_main()
             except Exception as error:
@@ -37,6 +39,7 @@ def main():
         if today == 15 or today == 30:
             try:
                 download_data()
+                create_info_file()
                 upload_data()
                 send_email_main()
             except Exception as error:

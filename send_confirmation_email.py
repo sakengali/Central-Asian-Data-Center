@@ -7,7 +7,12 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email.mime.text import MIMEText
+from email import encoders
 
+from upload_data_to_drive import get_date_folder_name
 
 #set the path of the correct folder
 cwd = os.getcwd()
@@ -43,8 +48,6 @@ def get_credentials():
             token.write(creds.to_json())
 
     return creds
-
-
 
 def send_email(message_text : str):
     """Create and send an email message
@@ -86,6 +89,53 @@ def send_email(message_text : str):
         send_message = None
     return send_message
 
+def send_email_with_attachment(message_text : str, file_path : str):
+    """Create and send an email message
+    Print the returned  message id
+    Returns: Message object, including message id
+    """
+
+    try:
+        creds = get_credentials()
+        service = build("gmail", "v1", credentials=creds)
+        
+        # Create the email
+        message = MIMEMultipart()
+        message["To"] = "dhawal.shah@nu.edu.kz,sakengali.kazhiyev@nu.edu.kz"
+        message["From"] = "aqsensor@nu.edu.kz"
+        message["Subject"] = "Data Upload Confirmation"
+        
+        # Add the email body
+        message.attach(MIMEText(message_text, "html"))
+        
+        # Attach the file
+        with open(file_path, "rb") as f:
+            mime_base = MIMEBase("application", "octet-stream")
+            mime_base.set_payload(f.read())
+        
+        encoders.encode_base64(mime_base)
+        mime_base.add_header("Content-Disposition", f"attachment; filename={file_path.split('/')[-1]}")
+        message.attach(mime_base)
+        
+        # Encode the message
+        encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+
+        create_message = {"raw": encoded_message}
+        
+        # Send the message
+        send_message = (
+            service.users()
+            .messages()
+            .send(userId="me", body=create_message)
+            .execute()
+        )
+        
+        print(f'Confirmation message sent (Id: {send_message["id"]})')
+    except HttpError as error:
+        print(f"An error occurred: {error}")
+        send_message = None
+
+    return send_message
 
 
 def send_email_main(is_successful : bool = True, error : str = ''):
@@ -94,6 +144,10 @@ def send_email_main(is_successful : bool = True, error : str = ''):
     day2 = pd.Timestamp.today().strftime("%d-%b-%Y")
 
     if is_successful:
+
+        date_folder = get_date_folder_name()
+        level_folder = "Level 0"
+        file_path = f"{cwd}/Central Asian Data/KZ/{level_folder}/{date_folder}/info.txt"
         message_text = f"""
             <p>Dear Members of the NU Air Quality Project</p>
 
@@ -101,6 +155,7 @@ def send_email_main(is_successful : bool = True, error : str = ''):
 
             <p>Best,</p>
         """    
+        send_email_with_attachment(message_text=message_text, file_path=file_path)
     else:
         message_text = f"""
             <p>Dear Members of the NU Air Quality Project</p>
@@ -109,7 +164,8 @@ def send_email_main(is_successful : bool = True, error : str = ''):
 
             <p>Best,</p>
         """
-    send_email(message_text=message_text)
+
+        send_email(message_text=message_text)
 
 
 
