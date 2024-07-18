@@ -202,7 +202,7 @@ def upload_data_for(creds, country : str, indoor_folder_id : str, outdoor_folder
     with tqdm(os.listdir()) as t:
         for file_name in t:
             t.set_description(f"Uploading {file_name}")
-            upload_file_to_folder(creds, file_name, parent_folder_ids=[indoor_folder_id])
+            upload_file_to_folder(creds, file_name, parent_folder_ids=[outdoor_folder_id])
 
     return None
 
