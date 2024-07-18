@@ -3,7 +3,7 @@ import os
 from upload_data_to_drive import get_date_folder_name
 from datetime import datetime
 
-cwd = os.getcwd()
+cwd = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center"
 level_folder = "Level 0"
 date_folder_name =  "Jul-2024-1" #   get_date_folder_name()
 

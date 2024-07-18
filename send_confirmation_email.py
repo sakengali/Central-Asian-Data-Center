@@ -15,7 +15,7 @@ from email import encoders
 from upload_data_to_drive import get_date_folder_name
 
 #set the path of the correct folder
-cwd = os.getcwd()
+cwd = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center"
 
 def get_credentials():
     """Shows basic usage of the Gmail API.

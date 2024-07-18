@@ -15,7 +15,7 @@ Uploads newly downloaded data of KZ, KG and UZ to corresponding folders in Googl
 """
 
 #set the path of the correct folder
-cwd = os.getcwd()
+cwd = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center"
 
 def get_credentials():
     """ 
