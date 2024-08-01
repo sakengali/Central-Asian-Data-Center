@@ -2,6 +2,7 @@ import os.path
 import base64
 from email.message import EmailMessage
 import pandas as pd
+from typing import List
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -13,6 +14,7 @@ from email.mime.text import MIMEText
 from email import encoders
 
 from upload_data_to_drive import get_date_folder_name
+from helpers import get_sensors_info
 
 #set the path of the correct folder
 cwd : str = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center"
@@ -137,6 +139,23 @@ def send_email_with_attachment(message_text : str, file_path : str):
 
     return send_message
 
+def make_readable_list(str_list : List[str]) -> str:
+
+    if len(str_list) == 2:
+        return str_list[0] + " and " + str_list[1]
+    else:
+        str_list[1] = str_list[0] + ", " + str_list[1]
+        str_list = str_list[1:] 
+        return make_readable_list(str_list)
+
+def get_list_off_sensors(country):
+    sensors = get_sensors_info(country)
+
+    off_sensors = [sensor.name for sensor in sensors.values() if sensor.is_turned_off()]
+
+    return make_readable_list(off_sensors)
+
+
 
 def send_email_main(is_successful : bool = True, error : str = ''):
 
@@ -152,7 +171,11 @@ def send_email_main(is_successful : bool = True, error : str = ''):
             <p>Dear Members of the NU Air Quality Project</p>
 
             <p>Please be informed that the data for Air Quality Sensors in Kazakhstan, Kyrgyzstan and Uzbekistan were downloaded for the period of {day1} and {day2}. All the data are available at the <a href="https://drive.google.com/drive/folders/12YDIO1ya_bIxyFifYfnBq7dU-64WoqjX?usp=sharing"> NU Data Center</a>.</p>
+            
+            <p></p>
 
+            <p>WARNING: There are some sensors that are deployed but not sending any data. <br>For Kazakhstan: {get_list_off_sensors('kz')} </p>
+            
             <p>Best,</p>
         """    
         send_email_with_attachment(message_text=message_text, file_path=file_path)

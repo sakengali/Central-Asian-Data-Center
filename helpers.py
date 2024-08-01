@@ -24,7 +24,7 @@ class Sensor(NamedTuple):
         return not df.empty
 
     def is_turned_off(self):
-        return self.is_deployed and (not self.is_responding)
+        return self.is_deployed and not self.is_responding()
 
 def get_sensors_info(country : str) -> List[Sensor]:
 
