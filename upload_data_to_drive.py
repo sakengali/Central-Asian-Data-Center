@@ -215,7 +215,7 @@ def upload_info_file(creds, country : str, date_folder_id : str):
     date_folder_name = get_date_folder_name()
 
     os.chdir(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}")
-    upload_file_to_folder(creds, "info.txt", parent_folder_ids=[date_folder_id])
+    upload_file_to_folder(creds, f"{country.lower()}_info.txt", parent_folder_ids=[date_folder_id])
 
     return None
 
@@ -235,7 +235,7 @@ def main_upload():
             upload_data_for(creds, country, *folder_ids[country])
 
             # upload info.txt file
-            print(f'Uploading info.txt file for {country}')
+            print(f'Uploading {country.lower()}_info.txt file for {country}')
             upload_info_file(creds, country, date_folder_ids[country])
         except FileNotFoundError as e:
             print(f"Couldn't upload data for {country}. Error: {e}")

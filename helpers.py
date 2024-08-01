@@ -2,12 +2,12 @@ import pandas as pd
 import os
 from upload_data_to_drive import get_date_folder_name
 from datetime import datetime
-from typing import NamedTuple, List
+from typing import NamedTuple, List, Dict
 import csv
 
-cwd = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center"
+cwd : str = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center"
 level_folder : str = "Level 0"
-date_folder_name = get_date_folder_name()
+date_folder_name : str = get_date_folder_name()
 
 class Sensor(NamedTuple):
     name : str
@@ -27,13 +27,19 @@ class Sensor(NamedTuple):
         return self.is_deployed and (not self.is_responding)
 
 def get_sensors_info(country : str) -> List[Sensor]:
-    sensors : List[Sensor] = []
+
+    """ 
+        inputs: country 
+        returns a Dict[sensor_name : sensor_info] for country's sensors
+    """
+
+    sensors : Dict[str, Sensor] = {}
     
     with open(f"sensors_info/{country.lower()}_deployed_sensors.csv", mode='r', newline='') as file:
         reader = csv.DictReader(file)
         
         for row in reader:
-            person = Sensor(
+            sensor = Sensor(
                 name = row['sensor_name'],
                 sensor_type=row['sensor_type'],
                 country = row['country'].upper(),
@@ -41,12 +47,26 @@ def get_sensors_info(country : str) -> List[Sensor]:
                 location=row['location'],
                 owner=row['owner'],
             )
-            sensors.append(person)
+            
+            sensors[sensor.name] = sensor
     
     return sensors
 
 
-def sensor_line(sensor_name, status) -> str:
+def sensor_line_v1(sensor : Sensor) -> str:
+    sensor_name = sensor.name
+    status = "Deployed    " if sensor.is_deployed else "Not Deployed"
+    response = "Responding" if sensor.is_responding() else "Not Responding"
+
+    if len(sensor_name) < 8:
+        return f"{sensor_name}\t" + "\t"*(2) + f"{status}" + "\t"*(2) + f"{response}" 
+    elif len(sensor_name) < 16:
+        return f"{sensor_name}\t" + "\t"*(1) + f"{status}" +  "\t"*(2) + f"{response}"
+    else:
+        return f"{sensor_name}\t" + f"{status}" + "\t"*(2) + f"{response}"
+
+
+def sensor_line_v0(sensor_name, status) -> str:
     if len(sensor_name) < 8:
         return f"{sensor_name}\t" + "\t"*(2) + f"{status}"
     elif len(sensor_name) < 16:
@@ -57,31 +77,51 @@ def sensor_line(sensor_name, status) -> str:
 
 def create_info_file():
 
+    """ creates the {country}_info.txt file """
+
     try:
         for country in ['KZ', 'KG', 'UZ']:
 
-            with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/info.txt", 'w') as f:
+            with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_info.txt", 'w') as f:
                 f.write(f"The data of {country} sensors was downloaded on {datetime.now()}\n\n")
                 f.write(f"Date Folder Name: {date_folder_name}\n\n")
                 f.write(f"Level Folder: {level_folder}\n\n")
-                f.write("Sensor\t\tStatus\n")
+                f.write("Sensor\t\tStatus\t\tResponse\n")
 
-            for sensor_type in ['Indoor Sensors', 'Outdoor Sensors']:
-                with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/info.txt", 'a') as f:
-                    f.write(f"\n({sensor_type}):\n")
-                for sensor in os.listdir(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}"):
-                    sensor_name = sensor.split('-')[0]
+            try:
+                sensors = get_sensors_info(country)
+                for sensor_type in ['Indoor Sensors', 'Outdoor Sensors']:
+                    with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_info.txt", 'a') as f:
+                        f.write(f"\n({sensor_type}):\n")
+                    for sensor in sorted(os.listdir(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}")):
+                        sensor_name : str = sensor.split('-')[0]
+                        sensor : Sensor = sensors[sensor_name]
 
-                    df = pd.read_csv(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}/{sensor}")
-                    if df.empty:
-                        status = "Not Responding (Empty Data)"
-                        with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/info.txt", 'a') as f:
-                            f.write(sensor_line(sensor_name, status) + "\n")
-                    else:
-                        status = "Responding (Data Available)"
-                        with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/info.txt", 'a') as f:
-                            f.write(sensor_line(sensor_name, status) + "\n")
+                        with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_info.txt", 'a') as f:
+                            f.write(sensor_line_v1(sensor) + "\n")
+
+            except FileNotFoundError as e:
+                print(e)
+                for sensor_type in ['Indoor Sensors', 'Outdoor Sensors']:
+                    with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_info.txt", 'a') as f:
+                        f.write(f"\n({sensor_type}):\n")
+                    for sensor in sorted(os.listdir(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}")):
+                        sensor_name = sensor.split('-')[0]
+
+                        df = pd.read_csv(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}/{sensor}")
+                        if df.empty:
+                            status = "Not Responding (Empty Data)"
+                            with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_info.txt", 'a') as f:
+                                f.write(sensor_line_v0(sensor_name, status) + "\n")
+                        else:
+                            status = "Responding (Data Available)"
+                            with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_info.txt", 'a') as f:
+                                f.write(sensor_line_v0(sensor_name, status) + "\n")
+
     except FileNotFoundError as e:
         print(f"Couldn't create log file for {country}. Error: {e}")
 
     return
+
+#TODO:
+# request kg_deployed_sensors.csv and kz_deployed_sensors.csv files, and remove reduntant part of the code for old info_txt file.

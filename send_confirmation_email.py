@@ -15,7 +15,7 @@ from email import encoders
 from upload_data_to_drive import get_date_folder_name
 
 #set the path of the correct folder
-cwd = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center"
+cwd : str = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center"
 
 def get_credentials():
     """Shows basic usage of the Gmail API.
@@ -69,7 +69,7 @@ def send_email(message_text : str):
 
         message["To"] = ["dhawal.shah@nu.edu.kz","sakengali.kazhiyev@nu.edu.kz"]
         message["From"] = "aqsensor@nu.edu.kz"
-        message["Subject"] = "Data Upload Upload"
+        message["Subject"] = "Data Upload Message"
         
 
         # encoded message
@@ -147,11 +147,11 @@ def send_email_main(is_successful : bool = True, error : str = ''):
 
         date_folder = get_date_folder_name()
         level_folder = "Level 0"
-        file_path = f"{cwd}/Central Asian Data/KZ/{level_folder}/{date_folder}/info.txt"
+        file_path = f"{cwd}/Central Asian Data/KZ/{level_folder}/{date_folder}/kz_info.txt"
         message_text = f"""
             <p>Dear Members of the NU Air Quality Project</p>
 
-            <p>Please be informed that the data for Air Quality Sensors in Kazakhstan, Kyrgyzstan and Uzbekistan were downloaded for the period of {day1} and {day2}. All the data are available at the <a href="https://drive.google.com/drive/folders/12YDIO1ya_bIxyFifYfnBq7dU-64WoqjX?usp=sharing"> NU Data Center</a> folder in Google Drive.</p>
+            <p>Please be informed that the data for Air Quality Sensors in Kazakhstan, Kyrgyzstan and Uzbekistan were downloaded for the period of {day1} and {day2}. All the data are available at the <a href="https://drive.google.com/drive/folders/12YDIO1ya_bIxyFifYfnBq7dU-64WoqjX?usp=sharing"> NU Data Center</a>.</p>
 
             <p>Best,</p>
         """    
