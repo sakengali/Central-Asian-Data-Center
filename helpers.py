@@ -57,14 +57,18 @@ def sensor_line_v1(sensor : Sensor) -> str:
     sensor_name = sensor.name
     status = "Deployed    " if sensor.is_deployed else "Not Deployed"
     response = "Responding" if sensor.is_responding() else "Not Responding"
-
-    if len(sensor_name) < 8:
-        return f"{sensor_name}\t" + "\t"*(2) + f"{status}" + "\t"*(2) + f"{response}" 
-    elif len(sensor_name) < 16:
-        return f"{sensor_name}\t" + "\t"*(1) + f"{status}" +  "\t"*(2) + f"{response}"
+    location = sensor.location if sensor.is_deployed else "None"
+    location_length = len(location)
+    
+    if location_length < 8:
+        location_str = f"{location}"
+    elif location_length < 16:
+        location_str = f"{location}"
     else:
-        return f"{sensor_name}\t" + f"{status}" + "\t"*(2) + f"{response}"
-
+        location_str = f"{location}"
+    
+    # Format the output with fixed width for each column
+    return f"{sensor_name:<8}{location_str:<24}{status:<16}{response}"
 
 def sensor_line_v0(sensor_name, status) -> str:
     if len(sensor_name) < 8:
@@ -86,7 +90,7 @@ def create_info_file():
                 f.write(f"The data of {country} sensors was downloaded on {datetime.now()}\n\n")
                 f.write(f"Date Folder Name: {date_folder_name}\n\n")
                 f.write(f"Level Folder: {level_folder}\n\n")
-                f.write("Sensor\t\tStatus\t\tResponse\n")
+                f.write("Sensor\t\tLocation\t\t\tStatus\t\t\tResponse\n")
 
             try:
                 sensors = get_sensors_info(country)
