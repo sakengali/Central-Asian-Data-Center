@@ -35,7 +35,7 @@ def get_sensors_info(country : str) -> List[Sensor]:
 
     sensors : Dict[str, Sensor] = {}
     
-    with open(f"sensors_info/{country.lower()}_deployed_sensors.csv", mode='r', newline='') as file:
+    with open(f"{cwd}/sensors_info/{country.lower()}_deployed_sensors.csv", mode='r', newline='') as file:
         reader = csv.DictReader(file)
         
         for row in reader:
@@ -110,7 +110,15 @@ def create_info_file():
                     with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_info.txt", 'a') as f:
                         f.write(f"\n({sensor_type}):\n")
                     for sensor in sorted(os.listdir(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}")):
-                        sensor_name = sensor.split('-')[0]
+                        if country == 'UZ':
+                            if sensor_type == 'Indoor Sensors':
+                                sensor_name = sensor.split('-')[:4]
+                                sensor_name = sensor_name[0] + '-' + sensor_name[1] + '-' + sensor_name[2] + '-' + sensor_name[3]
+                            else:
+                                sensor_name = sensor.split('-')[:3]
+                                sensor_name = sensor_name[0] + '-' + sensor_name[1] + '-' + sensor_name[2]
+                        else:
+                            sensor_name = sensor.split('-')[0]
 
                         df = pd.read_csv(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}/{sensor}")
                         if df.empty:
