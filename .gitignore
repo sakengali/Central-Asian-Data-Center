@@ -1,6 +1,3 @@
-config.json
-debugger_main_script.py
-Central Asian Data/
-archive/
-credentials/
-/__pycache__/
+*
+!.gitignore
+!create_graphs.py
