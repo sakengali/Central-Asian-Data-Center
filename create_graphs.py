@@ -238,7 +238,7 @@ def create_pdf() -> None:
                 """
             html_content += "</body></html>"
 
-            output_pdf_path: str = f"{BASE_DIR}/Central Asian Data/{country}/Level 0/{date_folder_name}/graphs.pdf"
+            output_pdf_path: str = f"{BASE_DIR}/Central Asian Data/{country}/Level 0/{date_folder_name}/{country.lower()}_summary.pdf"
             pdfkit.from_string(html_content, output_pdf_path)
         except Exception as e:
             print(f"Error processing data for {country}: {e}")
