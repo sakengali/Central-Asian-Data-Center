@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib.dates import DateFormatter,DayLocator
 import base64
 from io import BytesIO
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from datetime import datetime, timedelta
 from upload_data_to_drive import get_date_folder_name
 
@@ -40,8 +40,8 @@ def create_graphs(df: pd.DataFrame, sensor: str, measuring: str) -> str:
     df = df.set_index('Timestamp').reindex(full_range).reset_index().rename(columns={'index': 'Timestamp'})
     
     plt.plot(df['Timestamp'], df[measuring], linestyle='-')
-    plt.xlabel('Day', fontsize=18)
     plt.ylabel(measuring, fontsize=18)
+    plt.title(f'{measuring}', fontsize=20, fontweight='bold')
     plt.grid(True)
 
     plt.gca().xaxis.set_major_locator(DayLocator())
@@ -83,8 +83,8 @@ def summary(data: List[pd.DataFrame], measuring: str, freq: str = 'H') -> str:
     plt.figure(figsize=(18, 6))
     plt.plot(combined_df['Timestamp'], combined_df[measuring], label=f'Combined {measuring}')
 
-    plt.xlabel('Day', fontsize=18)
     plt.ylabel(measuring, fontsize=18)
+    plt.title(f'{measuring}', fontsize=20, fontweight='bold')
 
     plt.grid(True)
     plt.gca().xaxis.set_major_locator(DayLocator())
@@ -107,8 +107,8 @@ def summary(data: List[pd.DataFrame], measuring: str, freq: str = 'H') -> str:
 def get_data(country: str) -> Tuple[
                             List[Tuple[str, str, str, str, bool, Tuple[str, str, str, str]]], 
                             List[Tuple[str, str, str, str, bool, Tuple[str, str, str, str]]],
-                            dict[str, str], 
-                            dict[str, str]
+                            Dict[str, str], 
+                            Dict[str, str]
                             ]:
     data_indoor: List[Tuple[str, str, bool, str]] = []
     data_outdoor: List[Tuple[str, str, bool, str]] = []
