@@ -1,8 +1,10 @@
 import os
 import pandas as pd
+import numpy as np
 import pdfkit
 import matplotlib.pyplot as plt
 from matplotlib.dates import DateFormatter,DayLocator
+from matplotlib.ticker import LogFormatter
 import base64
 from io import BytesIO
 from typing import List, Tuple
@@ -15,7 +17,7 @@ BASE_DIR: str = os.path.dirname(os.path.abspath(__file__))
 
 
 level_folder: str = "Level 0"
-date_folder_name: str = get_date_folder_name()
+date_folder_name: str = "Jul-2024-2"
 
 
 def get_period() -> str:
@@ -24,22 +26,25 @@ def get_period() -> str:
     sixteen_days_ago = (today - timedelta(days=16)).strftime("%b-%d-%Y")
     return f"{sixteen_days_ago} -- {today_str}"
 
+def forward(a):
+    a = np.deg2rad(a)
+    return np.rad2deg(np.log(np.abs(np.tan(a) + 1.0 / np.cos(a))))
+
+
+def inverse(a):
+    a = np.deg2rad(a)
+    return np.rad2deg(np.arctan(np.sinh(a)))
 
 def create_graphs(df: pd.DataFrame, sensor: str, measuring: str) -> str:
     df = df.copy()
     plt.figure(figsize=(18, 6))
     
-    # Ensure Timestamp is datetime and sorted
     df['Timestamp'] = pd.to_datetime(df['Timestamp'])
-    df = df.sort_values('Timestamp')
+    df.set_index('Timestamp', inplace=True)
+    df_resampled = df.resample("H").mean().reset_index()
+
+    plt.plot(df_resampled['Timestamp'], df_resampled[measuring])
     
-    # Create a complete range of timestamps with the same frequency as the data
-    full_range = pd.date_range(start=df['Timestamp'].min(), end=df['Timestamp'].max(), freq='H')
-    
-    # Reindex the DataFrame to include the full range, introducing NaNs where data is missing
-    df = df.set_index('Timestamp').reindex(full_range).reset_index().rename(columns={'index': 'Timestamp'})
-    
-    plt.plot(df['Timestamp'], df[measuring], linestyle='-')
     plt.xlabel('Day', fontsize=18)
     plt.ylabel(measuring, fontsize=18)
     plt.grid(True)
@@ -47,10 +52,14 @@ def create_graphs(df: pd.DataFrame, sensor: str, measuring: str) -> str:
     plt.gca().xaxis.set_major_locator(DayLocator())
     date_format = DateFormatter("%d")
     plt.gca().xaxis.set_major_formatter(date_format)
+    
+    if measuring in ['PM 2.5', 'CO2'] and df_resampled[measuring].max() > df_resampled[measuring].mean() * 2:
+        plt.yscale('log', base=2)
+        plt.gca().yaxis.set_major_formatter(LogFormatter(base=2, labelOnlyBase=False))
 
     plt.xticks(fontsize=16)
     plt.yticks(fontsize=16)
-    plt.tight_layout()
+    plt.tight_layout(pad=3)
     
     buf = BytesIO()
     plt.savefig(buf, format='png')
@@ -61,28 +70,22 @@ def create_graphs(df: pd.DataFrame, sensor: str, measuring: str) -> str:
     return f"data:image/png;base64,{img_base64}"
 
 
-def summary(data: List[pd.DataFrame], measuring: str, freq: str = 'H') -> str:
-    combined_df = pd.DataFrame()
-    for df in data:
-        df = df.copy()
-        if df.empty:
-            continue
-
-        df['Timestamp'] = pd.to_datetime(df['Timestamp'])
-        df.set_index('Timestamp', inplace=True)
-        df_resampled = df.resample(freq).mean().reset_index()
-
-        if combined_df.empty:
-            combined_df = df_resampled[['Timestamp', measuring]].copy()
-        else:
-            combined_df = combined_df.merge(df_resampled[['Timestamp', measuring]], on='Timestamp', how='outer', suffixes=('', '_dup'))
-
-    # Calculate the mean of the measuring column across all dataframes
-    combined_df[measuring] = combined_df.filter(like=measuring).mean(axis=1)
-
+def summary(data: List[dict[str, pd.DataFrame]], measuring: str, freq: str = 'H') -> str:
     plt.figure(figsize=(18, 6))
-    plt.plot(combined_df['Timestamp'], combined_df[measuring], label=f'Combined {measuring}')
 
+    for i, d in enumerate(data):
+        for sensor_name, df in d.items():
+            print(sensor_name)
+            df = df.copy()
+            if df.empty:
+                continue
+            
+            df['Timestamp'] = pd.to_datetime(df['Timestamp'])
+            df.set_index('Timestamp', inplace=True)
+            df_resampled = df.resample(freq).mean().reset_index()
+
+            plt.plot(df_resampled['Timestamp'], df_resampled[measuring], label=f'{sensor_name}')
+    
     plt.xlabel('Day', fontsize=18)
     plt.ylabel(measuring, fontsize=18)
 
@@ -91,8 +94,13 @@ def summary(data: List[pd.DataFrame], measuring: str, freq: str = 'H') -> str:
     date_format = DateFormatter("%d")
     plt.gca().xaxis.set_major_formatter(date_format)
 
+    if measuring in ['PM 2.5', 'CO2'] and df_resampled[measuring].max() > df_resampled[measuring].mean() * 2:
+        plt.yscale('log', base=2)
+        plt.gca().yaxis.set_major_formatter(LogFormatter(base=2, labelOnlyBase=False))
+
     plt.xticks(fontsize=16)
     plt.yticks(fontsize=16)
+    plt.legend(fontsize=16, loc='center left', bbox_to_anchor=(1, 0.5))
     plt.tight_layout()
 
     buf = BytesIO()
@@ -133,9 +141,9 @@ def get_data(country: str) -> Tuple[
                 latitude: str = str(df['Latitude'][0])
                 longitude: str = str(df['Longitude'][0])
                 if sensor_type == 'Indoor Sensors':
-                    summary_indoor_data.append(df)
+                    summary_indoor_data.append({sensor_name: df})
                 elif sensor_type == 'Outdoor Sensors':
-                    summary_outdoor_data.append(df)
+                    summary_outdoor_data.append({sensor_name: df})
                 plot_path_pm25 = create_graphs(df, sensor_name, 'PM 2.5')
                 plot_path_rh = create_graphs(df, sensor_name, 'Relative Humidity')
                 plot_path_temp = create_graphs(df, sensor_name, 'Temperature')
