@@ -255,3 +255,5 @@ def create_pdf() -> None:
         except Exception as e:
             print(f"Error processing data for {country}: {e}")
             continue
+
+#just ckecking
