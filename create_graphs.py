@@ -7,7 +7,7 @@ from matplotlib.dates import DateFormatter,DayLocator
 from matplotlib.ticker import LogFormatter, NullFormatter, FixedLocator, FuncFormatter
 import base64
 from io import BytesIO
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from datetime import datetime, timedelta
 from upload_data_to_drive import get_date_folder_name
 
@@ -45,8 +45,8 @@ def create_graphs(df: pd.DataFrame, sensor: str, measuring: str) -> str:
 
     plt.plot(df_resampled['Timestamp'], df_resampled[measuring])
     
-    plt.xlabel('Day', fontsize=18)
     plt.ylabel(measuring, fontsize=18)
+    plt.title(f'{measuring}', fontsize=20, fontweight='bold')
     plt.grid(True)
 
     plt.gca().xaxis.set_major_locator(DayLocator())
@@ -70,7 +70,7 @@ def create_graphs(df: pd.DataFrame, sensor: str, measuring: str) -> str:
     return f"data:image/png;base64,{img_base64}"
 
 
-def summary(data: List[dict[str, pd.DataFrame]], measuring: str, freq: str = 'H') -> str:
+def summary(data: List[Dict[str, pd.DataFrame]], measuring: str, freq: str = 'H') -> str:
     plt.figure(figsize=(18, 6))
 
     for i, d in enumerate(data):
@@ -86,9 +86,8 @@ def summary(data: List[dict[str, pd.DataFrame]], measuring: str, freq: str = 'H'
 
             plt.plot(df_resampled['Timestamp'], df_resampled[measuring], label=f'{sensor_name}')
     
-    plt.xlabel('Day', fontsize=18)
     plt.ylabel(measuring, fontsize=18)
-
+    plt.title(f'{measuring}', fontsize=20, fontweight='bold')
     plt.grid(True)
     plt.gca().xaxis.set_major_locator(DayLocator())
     date_format = DateFormatter("%d")
@@ -115,8 +114,8 @@ def summary(data: List[dict[str, pd.DataFrame]], measuring: str, freq: str = 'H'
 def get_data(country: str) -> Tuple[
                             List[Tuple[str, str, str, str, bool, Tuple[str, str, str, str]]], 
                             List[Tuple[str, str, str, str, bool, Tuple[str, str, str, str]]],
-                            dict[str, str], 
-                            dict[str, str]
+                            Dict[str, str], 
+                            Dict[str, str]
                             ]:
     data_indoor: List[Tuple[str, str, bool, str]] = []
     data_outdoor: List[Tuple[str, str, bool, str]] = []
@@ -162,13 +161,13 @@ def get_data(country: str) -> Tuple[
     summary_indoor_data_sorted = sorted(summary_indoor_data, key=lambda x: (len(list(x.keys())[0]), list(x.keys())[0]))
     summary_outdoor_data_sorted = sorted(summary_outdoor_data, key=lambda x: (len(list(x.keys())[0]), list(x.keys())[0]))
 
-    summary_indoor : dict[str, str] = {
+    summary_indoor : Dict[str, str] = {
         'PM 2.5': summary(summary_indoor_data_sorted, 'PM 2.5'),
         'RH': summary(summary_indoor_data_sorted, 'Relative Humidity'),
         'Temperture': summary(summary_indoor_data_sorted, 'Temperature'),
         'CO2': summary(summary_indoor_data_sorted, 'CO2') 
     }
-    summary_outdoor : dict[str, str] = {
+    summary_outdoor : Dict[str, str] = {
         'PM 2.5': summary(summary_outdoor_data_sorted, 'PM 2.5'),
         'RH': summary(summary_outdoor_data_sorted, 'Relative Humidity'),  
         'Temperture': summary(summary_outdoor_data_sorted, 'Temperature')
@@ -251,7 +250,7 @@ def create_pdf() -> None:
                 """
             html_content += "</body></html>"
 
-            output_pdf_path: str = f"{BASE_DIR}/Central Asian Data/{country}/Level 0/{date_folder_name}/graphs.pdf"
+            output_pdf_path: str = f"{BASE_DIR}/Central Asian Data/{country}/Level 0/{date_folder_name}/{country.lower()}_summary.pdf"
             pdfkit.from_string(html_content, output_pdf_path)
         except Exception as e:
             print(f"Error processing data for {country}: {e}")
