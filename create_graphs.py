@@ -4,7 +4,7 @@ import numpy as np
 import pdfkit
 import matplotlib.pyplot as plt
 from matplotlib.dates import DateFormatter,DayLocator
-from matplotlib.ticker import LogFormatter
+from matplotlib.ticker import LogFormatter, NullFormatter, FixedLocator, FuncFormatter
 import base64
 from io import BytesIO
 from typing import List, Tuple
@@ -156,20 +156,25 @@ def get_data(country: str) -> Tuple[
                 data_indoor.append((sensor_name, latitude, longitude, sensor_type, status, (plot_path_pm25, plot_path_rh, plot_path_temp, plot_path_co2)))
             elif sensor_type == 'Outdoor Sensors':
                 data_outdoor.append((sensor_name, latitude, longitude, sensor_type, status, (plot_path_pm25, plot_path_rh, plot_path_temp, plot_path_co2)))
+        data_indoor_sorted = sorted(data_indoor, key=lambda x: (len(x[0]), x[0]))
+        data_outdoor_sorted = sorted(data_outdoor, key=lambda x: (len(x[0]), x[0]))
+        
+    summary_indoor_data_sorted = sorted(summary_indoor_data, key=lambda x: (len(list(x.keys())[0]), list(x.keys())[0]))
+    summary_outdoor_data_sorted = sorted(summary_outdoor_data, key=lambda x: (len(list(x.keys())[0]), list(x.keys())[0]))
 
     summary_indoor : dict[str, str] = {
-        'PM 2.5': summary(summary_indoor_data, 'PM 2.5'),
-        'RH': summary(summary_indoor_data, 'Relative Humidity'),
-        'Temperture': summary(summary_indoor_data, 'Temperature'),
-        'CO2': summary(summary_indoor_data, 'CO2') 
+        'PM 2.5': summary(summary_indoor_data_sorted, 'PM 2.5'),
+        'RH': summary(summary_indoor_data_sorted, 'Relative Humidity'),
+        'Temperture': summary(summary_indoor_data_sorted, 'Temperature'),
+        'CO2': summary(summary_indoor_data_sorted, 'CO2') 
     }
     summary_outdoor : dict[str, str] = {
-        'PM 2.5': summary(summary_outdoor_data, 'PM 2.5'),
-        'RH': summary(summary_outdoor_data, 'Relative Humidity'),  
-        'Temperture': summary(summary_outdoor_data, 'Temperature')
+        'PM 2.5': summary(summary_outdoor_data_sorted, 'PM 2.5'),
+        'RH': summary(summary_outdoor_data_sorted, 'Relative Humidity'),  
+        'Temperture': summary(summary_outdoor_data_sorted, 'Temperature')
     }
     
-    return data_indoor, data_outdoor, summary_indoor, summary_outdoor
+    return data_indoor_sorted, data_outdoor_sorted, summary_indoor, summary_outdoor
 
 
 def create_pdf() -> None:
