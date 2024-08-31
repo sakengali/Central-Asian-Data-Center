@@ -2,6 +2,8 @@ import os
 import pandas as pd
 import numpy as np
 import pdfkit
+import gspread
+import json
 import matplotlib.pyplot as plt
 from matplotlib.dates import DateFormatter,DayLocator
 from matplotlib.ticker import LogFormatter, NullFormatter, FixedLocator, FuncFormatter
@@ -16,6 +18,8 @@ BASE_DIR: str = os.path.dirname(os.path.abspath(__file__))
 #     current_time: str = f.read()
 
 
+gc = gspread.service_account(filename='./cosmic-talent-416001-3c711f8ccf2e.json')
+
 level_folder: str = "Level 0"
 date_folder_name: str = "Jul-2024-2"
 
@@ -26,14 +30,6 @@ def get_period() -> str:
     sixteen_days_ago = (today - timedelta(days=16)).strftime("%b-%d-%Y")
     return f"{sixteen_days_ago} -- {today_str}"
 
-def forward(a):
-    a = np.deg2rad(a)
-    return np.rad2deg(np.log(np.abs(np.tan(a) + 1.0 / np.cos(a))))
-
-
-def inverse(a):
-    a = np.deg2rad(a)
-    return np.rad2deg(np.arctan(np.sinh(a)))
 
 def create_graphs(df: pd.DataFrame, sensor: str, measuring: str) -> str:
     df = df.copy()
@@ -75,7 +71,7 @@ def summary(data: List[Dict[str, pd.DataFrame]], measuring: str, freq: str = 'H'
 
     for i, d in enumerate(data):
         for sensor_name, df in d.items():
-            print(sensor_name)
+            # print(sensor_name)
             df = df.copy()
             if df.empty:
                 continue
@@ -143,13 +139,13 @@ def get_data(country: str) -> Tuple[
                     summary_indoor_data.append({sensor_name: df})
                 elif sensor_type == 'Outdoor Sensors':
                     summary_outdoor_data.append({sensor_name: df})
-                plot_path_pm25 = create_graphs(df, sensor_name, 'PM 2.5')
-                plot_path_rh = create_graphs(df, sensor_name, 'Relative Humidity')
-                plot_path_temp = create_graphs(df, sensor_name, 'Temperature')
+                plot_path_pm25: str = create_graphs(df, sensor_name, 'PM 2.5')
+                plot_path_rh: str = create_graphs(df, sensor_name, 'Relative Humidity')
+                plot_path_temp: str = create_graphs(df, sensor_name, 'Temperature')
                 if sensor_type == 'Indoor Sensors':
-                    plot_path_co2 = create_graphs(df, sensor_name, 'CO2')
+                    plot_path_co2: str = create_graphs(df, sensor_name, 'CO2')
                 elif sensor_type == 'Outdoor Sensors':
-                    plot_path_co2 = ""
+                    plot_path_co2: str = ""
 
             if sensor_type == 'Indoor Sensors':
                 data_indoor.append((sensor_name, latitude, longitude, sensor_type, status, (plot_path_pm25, plot_path_rh, plot_path_temp, plot_path_co2)))
@@ -180,6 +176,17 @@ def create_pdf() -> None:
     for country in ['KZ', 'KG', 'UZ']:
         try:
             data_indoor, data_outdoor, summary_indoor, summary_outdoor = get_data(country)
+
+            with open("config.json", "r") as f:
+                config = json.load(f)
+                sheet_key = config[f"{str.lower(country)}_client_spreadsheet"]
+            sh = gc.open_by_key(sheet_key)
+            
+            sensors_locs: Dict = {}
+            for w in sh.worksheets():
+                tmp_name: List = w.col_values(1)[1:]
+                tmp_loc: List = w.col_values(6)[1:]
+                sensors_locs.update(dict(zip(tmp_name, tmp_loc)))            
             html_content: str = """
             <html>
             <head>
@@ -220,7 +227,7 @@ def create_pdf() -> None:
                 html_content += f"""
                 <div>
                     <p>Sensor Name: {sensor_name}</p>
-                    <p>Location: NIS ({latitude}, {longitude})</p>
+                    <p>Location: NIS ({latitude}, {longitude}), {sensors_locs[sensor_name]}</p>
                     <div>{plot_img_tag_pm25}</div>
                     <div>{plot_img_tag_rh}</div>
                     <div>{plot_img_tag_temp}</div>
