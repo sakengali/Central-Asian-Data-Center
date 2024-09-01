@@ -13,8 +13,7 @@ from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email import encoders
 
-from upload_data_to_drive import get_date_folder_name
-from helpers import get_sensors_info
+from helpers import get_sensors_info, date_folder_name
 
 #set the path of the correct folder
 cwd : str = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center"
@@ -163,10 +162,9 @@ def send_email_main(is_successful : bool = True, error : str = ''):
     day2 = pd.Timestamp.today().strftime("%d-%b-%Y")
 
     if is_successful:
-
-        date_folder = get_date_folder_name()
+        
         level_folder = "Level 0"
-        file_path = f"{cwd}/Central Asian Data/KZ/{level_folder}/{date_folder}/kz_info.txt"
+        file_path = f"{cwd}/Central Asian Data/KZ/{level_folder}/{date_folder_name}/kz_info.txt"
         message_text = f"""
             <p>Dear Members of the NU Air Quality Project</p>
 

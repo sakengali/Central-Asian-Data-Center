@@ -10,7 +10,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 
-from helpers import cwd, get_date_folder_name
+from helpers import cwd, date_folder_name
 
 """
 Uploads newly downloaded data of KZ, KG and UZ to corresponding folders in Google Drive.
@@ -117,9 +117,6 @@ def create_folders(creds):
     kg_level0_folder_id = "1rH60ZFRlwkC_1gR1a6iTg43fZzWBylC_"
     uz_level0_folder_id = "1emKDUabDiUCEoqTRG0J8yrUnSsA3UlzB"
 
-    # create date folder
-    date_folder_name = get_date_folder_name()
-
     kz_date_folder_id = create_folder_in_folder(creds, date_folder_name, [kz_level0_folder_id])
     kg_date_folder_id = create_folder_in_folder(creds, date_folder_name, [kg_level0_folder_id])
     uz_date_folder_id = create_folder_in_folder(creds, date_folder_name, [uz_level0_folder_id])
@@ -168,11 +165,10 @@ def create_folders(creds):
 
 def upload_data_for(creds, country : str, indoor_folder_id : str, outdoor_folder_id : str):
     """
-    
+    Upload data of sensors in .csv files
     """
 
     level_folder = "Level 0"
-    date_folder_name = get_date_folder_name()
     indoor_folder_name = 'Indoor Sensors'
     outdoor_folder_name = 'Outdoor Sensors'
 
@@ -200,7 +196,6 @@ def upload_info_file(creds, country : str, date_folder_id : str):
     """
 
     level_folder = "Level 0"
-    date_folder_name = get_date_folder_name()
 
     os.chdir(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}")
     upload_file_to_folder(creds, f"{country.lower()}_info.txt", parent_folder_ids=[date_folder_id])
@@ -213,7 +208,6 @@ def upload_summary_file(creds, country : str, date_folder_id : str):
     """
 
     level_folder = "Level 0"
-    date_folder_name = get_date_folder_name()
 
     os.chdir(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}")
     upload_file_to_folder(creds, f"{country.lower()}_summary.pdf", parent_folder_ids=[date_folder_id])
