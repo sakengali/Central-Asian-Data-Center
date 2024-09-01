@@ -31,19 +31,22 @@ def main():
             try:
                 download_data()
                 create_info_file()
+                create_pdf()
                 upload_data()
                 send_email_main()
             except Exception as error:
                 send_email_main(is_successful=False, error=error)
     else:           # all other months
-        if today == 15 or today == 30:
+        if today == 1 or today == 30:
             try:
-                download_data()
-                create_info_file()
-                upload_data()
-                send_email_main()
+                #download_data()
+                #create_info_file()
+                create_pdf()
+                #upload_data()
+                #send_email_main()
             except Exception as error:
-                send_email_main(is_successful=False, error=error)
+                pass
+                #send_email_main(is_successful=False, error=error)
 
 if __name__ == "__main__":
     main()

@@ -36,7 +36,7 @@ def create_graphs(df: pd.DataFrame, sensor: str, measuring: str) -> str:
     
     df['Timestamp'] = pd.to_datetime(df['Timestamp'])
     df.set_index('Timestamp', inplace=True)
-    df_resampled = df.resample("H").mean().reset_index()
+    df_resampled = df.resample("h").mean().reset_index()
 
     plt.plot(df_resampled['Timestamp'], df_resampled[measuring])
     
@@ -65,7 +65,7 @@ def create_graphs(df: pd.DataFrame, sensor: str, measuring: str) -> str:
     return f"data:image/png;base64,{img_base64}"
 
 
-def summary(data: List[Dict[str, pd.DataFrame]], measuring: str, freq: str = 'H') -> str:
+def summary(data: List[Dict[str, pd.DataFrame]], measuring: str, freq: str = 'h') -> str:
     plt.figure(figsize=(18, 6))
 
     for i, d in enumerate(data):

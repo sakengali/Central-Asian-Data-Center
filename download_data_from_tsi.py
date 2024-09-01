@@ -84,7 +84,7 @@ def get_sensor_data(device_id : str, device_name : str, is_indoor=True, headers 
 
     params = {
             'device_id' : device_id,
-            'age' : 16,
+            'age' : 17,
             'telem[]' : telemetry,
         }
     
