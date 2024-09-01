@@ -13,10 +13,7 @@ from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email import encoders
 
-from helpers import get_sensors_info, date_folder_name
-
-#set the path of the correct folder
-cwd : str = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center"
+from helpers import get_sensors_info, date_folder_name, cwd
 
 def get_credentials():
     """Shows basic usage of the Gmail API.
@@ -90,7 +87,7 @@ def send_email(message_text : str):
         send_message = None
     return send_message
 
-def send_email_with_attachment(message_text : str, file_path : str):
+def send_email_with_attachment(message_text : str, file_path_list : str):
     """Create and send an email message
     Print the returned  message id
     Returns: Message object, including message id
@@ -102,21 +99,21 @@ def send_email_with_attachment(message_text : str, file_path : str):
         
         # Create the email
         message = MIMEMultipart()
-        message["To"] = "dhawal.shah@nu.edu.kz,sakengali.kazhiyev@nu.edu.kz"
+        message["To"] = "sakengali.kazhiyev@nu.edu.kz"
         message["From"] = "aqsensor@nu.edu.kz"
         message["Subject"] = "Data Upload Confirmation"
         
         # Add the email body
         message.attach(MIMEText(message_text, "html"))
         
-        # Attach the file
-        with open(file_path, "rb") as f:
-            mime_base = MIMEBase("application", "octet-stream")
-            mime_base.set_payload(f.read())
-        
-        encoders.encode_base64(mime_base)
-        mime_base.add_header("Content-Disposition", f"attachment; filename={file_path.split('/')[-1]}")
-        message.attach(mime_base)
+        # Attach the files
+        for file_path in file_path_list:
+            with open(file_path, "rb") as f:
+                mime_base = MIMEBase("application", "octet-stream")
+                mime_base.set_payload(f.read())
+                encoders.encode_base64(mime_base)
+                mime_base.add_header("Content-Disposition", f"attachment; filename={file_path.split('/')[-1]}")
+                message.attach(mime_base)
         
         # Encode the message
         encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
@@ -157,6 +154,9 @@ def get_list_off_sensors(country):
 
 
 def send_email_main(is_successful : bool = True, error : str = ''):
+    """Send the email to the recipients"""
+
+    print("Sending confirmation email...")
 
     day1 = pd.Timestamp.today() - pd.Timedelta(days=16); day1 = day1.strftime("%d-%b-%Y")
     day2 = pd.Timestamp.today().strftime("%d-%b-%Y")
@@ -164,7 +164,12 @@ def send_email_main(is_successful : bool = True, error : str = ''):
     if is_successful:
         
         level_folder = "Level 0"
-        file_path = f"{cwd}/Central Asian Data/KZ/{level_folder}/{date_folder_name}/kz_info.txt"
+        file_path_list = []
+
+        for cnt in ['KZ', 'KG', 'UZ']:
+            file_path_list.append(f"{cwd}/Central Asian Data/{cnt}/{level_folder}/{date_folder_name}/{cnt.lower()}_info.txt")
+            file_path_list.append(f"{cwd}/Central Asian Data/{cnt}/{level_folder}/{date_folder_name}/{cnt.lower()}_summary.pdf")
+
         message_text = f"""
             <p>Dear Members of the NU Air Quality Project</p>
 
@@ -176,7 +181,7 @@ def send_email_main(is_successful : bool = True, error : str = ''):
             
             <p>Best,</p>
         """    
-        send_email_with_attachment(message_text=message_text, file_path=file_path)
+        send_email_with_attachment(message_text=message_text, file_path_list=file_path_list)
     else:
         message_text = f"""
             <p>Dear Members of the NU Air Quality Project</p>
