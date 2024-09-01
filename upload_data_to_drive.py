@@ -10,12 +10,11 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 
+from helpers import cwd, get_date_folder_name
+
 """
 Uploads newly downloaded data of KZ, KG and UZ to corresponding folders in Google Drive.
 """
-
-#set the path of the correct folder
-cwd = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center"
 
 def get_credentials():
     """ 
@@ -85,6 +84,8 @@ def upload_file_to_folder(creds, file_name : str, parent_folder_ids : List[str])
         mime_type = 'text/csv'
     elif file_name[-3:] == 'txt':
         mime_type = 'text/plain'
+    elif file_name[-3:] == 'pdf':
+        mime_type = 'application/pdf'
 
     file_metadata = {
         'name' : file_name,
@@ -97,19 +98,6 @@ def upload_file_to_folder(creds, file_name : str, parent_folder_ids : List[str])
                                     fields='id').execute())
 
     return file.get('id')
-
-
-
-
-def get_date_folder_name() -> str:
-    """ returns date folder name"""
-
-    this_month = pd.Timestamp.today().strftime("%b-%Y")
-    month_part = '1' if pd.Timestamp.today().day <= 16 else '2'
-    return f"{this_month}-{month_part}"
-
-
-
 
 def create_folders(creds):
     """
@@ -219,6 +207,18 @@ def upload_info_file(creds, country : str, date_folder_id : str):
 
     return None
 
+def upload_summary_file(creds, country : str, date_folder_id : str):
+    """
+    uploads summary_{country}.pdf file to the date folder
+    """
+
+    level_folder = "Level 0"
+    date_folder_name = get_date_folder_name()
+
+    os.chdir(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}")
+    upload_file_to_folder(creds, f"{country.lower()}_summary.pdf", parent_folder_ids=[date_folder_id])
+
+    return None
 
 def main_upload():
     creds = get_credentials()
@@ -235,8 +235,11 @@ def main_upload():
             upload_data_for(creds, country, *folder_ids[country])
 
             # upload info.txt file
-            print(f'Uploading {country.lower()}_info.txt file for {country}')
+            print(f'Uploading {country.lower()}_info.txt file')
             upload_info_file(creds, country, date_folder_ids[country])
+
+            print(f'Uploading {country.lower()}_summary.pdf file')
+            upload_summary_file(creds, country, date_folder_ids[country])
         except FileNotFoundError as e:
             print(f"Couldn't upload data for {country}. Error: {e}")
 

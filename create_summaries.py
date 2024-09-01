@@ -11,16 +11,16 @@ import base64
 from io import BytesIO
 from typing import List, Tuple, Dict
 from datetime import datetime, timedelta
-from upload_data_to_drive import get_date_folder_name
+from helpers import get_date_folder_name
 from helpers import country_names, cwd
 
-#getting the correct path
-BASE_DIR: str = cwd
+#getting the correct path to this director
+BASE_DIR: str = os.getcwd() #cwd
 
 gc = gspread.service_account(filename='./cosmic-talent-416001-3c711f8ccf2e.json')
 
 level_folder: str = "Level 0"
-date_folder_name: str = get_date_folder_name()
+date_folder_name: str = "Jul-2024-2" # get_date_folder_name()
 
 
 def get_period() -> str:
@@ -265,7 +265,20 @@ def create_pdf() -> None:
             pdfkit.from_string(html_content, output_pdf_path)
             print(f"Summary pdf created successfully for {country}")
         except Exception as e:
-            print(f"Error processing data for {country}: {e}")
+            html_content: str = """
+            <html>
+            <head>
+                <style>
+                    body { background-color: white; font-family: 'Times New Roman', Times, serif; font-size: 24px; margin-left: 20%; margin-right: 20%; margin-top: 30%; margin-bottom: 30%; text-align: center;}
+                </style>
+            </head>
+            <body>
+            """
+            html_content += f"""
+            <p> No data about the location of the sensors in {country_names[country]} were found. </p>
+            """
+            html_content += "</body></html>"
+            output_pdf_path: str = f"{BASE_DIR}/Central Asian Data/{country}/Level 0/{date_folder_name}/{country.lower()}_summary.pdf"
+            pdfkit.from_string(html_content, output_pdf_path)
+            print(f"Error processing data for {country}: {e}. An empty pdf was created.")
             continue
-
-#just ckecking

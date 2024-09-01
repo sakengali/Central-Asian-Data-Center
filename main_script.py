@@ -41,8 +41,8 @@ def main():
             try:
                 #download_data()
                 #create_info_file()
-                create_pdf()
-                #upload_data()
+                #create_pdf()
+                upload_data()
                 #send_email_main()
             except Exception as error:
                 pass
@@ -50,5 +50,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-#make a log file - stating metadata for all sensors, and showing if they're empty
