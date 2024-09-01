@@ -9,6 +9,12 @@ cwd : str = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-C
 level_folder : str = "Level 0"
 date_folder_name : str = get_date_folder_name()
 
+country_names = {
+    'KZ': 'Kazakhstan',
+    'KG': 'Kyrgyzstan',
+    'UZ': 'Uzbekistan'
+}
+
 class Sensor(NamedTuple):
     name : str
     sensor_type : str

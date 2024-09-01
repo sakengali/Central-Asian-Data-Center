@@ -2,7 +2,7 @@ from download_data_from_tsi import main_download
 from upload_data_to_drive import main_upload
 from send_confirmation_email import send_email_main
 from helpers import create_info_file
-
+from create_summaries import create_pdf
 import pandas as pd
 
 # today's day and month

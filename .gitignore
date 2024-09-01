@@ -1,6 +1,9 @@
 config.json
 debugger_main_script.py
+test_download_data_from_tsi.py
 Central Asian Data/
 archive/
 credentials/
-/__pycache__/
+sensors_info/
+__pycache__/
+cosmic-talent-416001-3c711f8ccf2e.json
