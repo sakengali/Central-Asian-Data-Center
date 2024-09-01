@@ -14,13 +14,13 @@ from datetime import datetime, timedelta
 from helpers import get_date_folder_name
 from helpers import country_names, cwd
 
-#getting the correct path to this director
-BASE_DIR: str = os.getcwd() #cwd
+#getting the correct path to this directory
+BASE_DIR: str = cwd
 
 gc = gspread.service_account(filename='./cosmic-talent-416001-3c711f8ccf2e.json')
 
 level_folder: str = "Level 0"
-date_folder_name: str = "Jul-2024-2" # get_date_folder_name()
+date_folder_name: str = get_date_folder_name()
 
 
 def get_period() -> str:
