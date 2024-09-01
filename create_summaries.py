@@ -177,7 +177,7 @@ def create_pdf() -> None:
         try:
             data_indoor, data_outdoor, summary_indoor, summary_outdoor = get_data(country)
 
-            with open("config.json", "r") as f:
+            with open(f"{cwd}/config.json", "r") as f:
                 config = json.load(f)
                 sheet_key = config[f"{str.lower(country)}_client_spreadsheet"]
             sh = gc.open_by_key(sheet_key)

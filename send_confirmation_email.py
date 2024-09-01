@@ -15,6 +15,8 @@ from email import encoders
 
 from helpers import get_sensors_info, date_folder_name, cwd
 
+message_recepients = "dhawal.shah@nu.edu.kz, michael.bergin@duke.edu, sakengali.kazhiyev@nu.edu.kz, baglan.zhubatkanov@nu.edu.kz, rauan.arstangaliyev@nu.edu.kz"
+
 def get_credentials():
     """Shows basic usage of the Gmail API.
     Lists the user's Gmail labels.
@@ -65,7 +67,7 @@ def send_email(message_text : str):
         message.add_header('Content-Type','text/html')
         message.set_payload(message_text)
 
-        message["To"] = ["dhawal.shah@nu.edu.kz","sakengali.kazhiyev@nu.edu.kz"]
+        message["To"] = message_recepients
         message["From"] = "aqsensor@nu.edu.kz"
         message["Subject"] = "Data Upload Message"
         
@@ -99,7 +101,7 @@ def send_email_with_attachment(message_text : str, file_path_list : str):
         
         # Create the email
         message = MIMEMultipart()
-        message["To"] = "sakengali.kazhiyev@nu.edu.kz"
+        message["To"] = message_recepients
         message["From"] = "aqsensor@nu.edu.kz"
         message["Subject"] = "Data Upload Confirmation"
         
