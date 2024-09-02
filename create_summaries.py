@@ -49,8 +49,14 @@ def create_graphs(df: pd.DataFrame, sensor: str, measuring: str) -> str:
     plt.gca().xaxis.set_major_formatter(date_format)
     
     if measuring in ['PM 2.5', 'CO2'] and df_resampled[measuring].max() > df_resampled[measuring].mean() * 2:
+        def custom_yscale(y, pos):
+            if y > 1:
+                return f'{y:.0f}'
+            else:
+                return f'{y:.2f}'
         plt.yscale('log', base=2)
-        plt.gca().yaxis.set_major_formatter(LogFormatter(base=2, labelOnlyBase=False))
+        plt.gca().yaxis.set_major_formatter(FuncFormatter(custom_yscale))
+
 
     plt.xticks(fontsize=16)
     plt.yticks(fontsize=16)
@@ -89,8 +95,14 @@ def summary(data: List[Dict[str, pd.DataFrame]], measuring: str, freq: str = 'h'
     plt.gca().xaxis.set_major_formatter(date_format)
 
     if measuring in ['PM 2.5', 'CO2'] and df_resampled[measuring].max() > df_resampled[measuring].mean() * 2:
+        def custom_yscale(y, pos):
+            if y > 1:
+                return f'{y:.0f}'
+            else:
+                return f'{y:.2f}'
         plt.yscale('log', base=2)
-        plt.gca().yaxis.set_major_formatter(LogFormatter(base=2, labelOnlyBase=False))
+        plt.gca().yaxis.set_major_formatter(FuncFormatter(custom_yscale))
+
 
     plt.xticks(fontsize=16)
     plt.yticks(fontsize=16)
@@ -176,17 +188,19 @@ def create_pdf() -> None:
         print(f"Creating summary pdf for {country} ...")
         try:
             data_indoor, data_outdoor, summary_indoor, summary_outdoor = get_data(country)
-
-            with open(f"{cwd}/config.json", "r") as f:
-                config = json.load(f)
-                sheet_key = config[f"{str.lower(country)}_client_spreadsheet"]
-            sh = gc.open_by_key(sheet_key)
-            
-            sensors_locs: Dict = {}
-            for w in sh.worksheets():
-                tmp_name: List = w.col_values(1)[1:]
-                tmp_loc: List = w.col_values(6)[1:]
-                sensors_locs.update(dict(zip(tmp_name, tmp_loc)))            
+            try:
+                with open(f"{cwd}/config.json", "r") as f:
+                    config = json.load(f)
+                    sheet_key = config[f"{str.lower(country)}_client_spreadsheet"]
+                sh = gc.open_by_key(sheet_key)
+                
+                sensors_locs: Dict = {}
+                for w in sh.worksheets():
+                    tmp_name: List = w.col_values(1)[1:]
+                    tmp_loc: List = w.col_values(6)[1:]
+                    sensors_locs.update(dict(zip(tmp_name, tmp_loc)))            
+            except:
+                sensors_locs: Dict = {}
             html_content: str = """
             <html>
             <head>
@@ -231,7 +245,7 @@ def create_pdf() -> None:
                 html_content += f"""
                 <div>
                     <p class='sensors-name'>Sensor <b>{sensor_name}</b></p>
-                    <p class='sensor-location' style='font-size:18px;'> <b>{sensors_locs[sensor_name]} ({latitude}, {longitude})</b></p>
+                    <p class='sensor-location' style='font-size:18px;'> <b>{sensors_locs.get(sensor_name, '')} ({latitude}, {longitude})</b></p>
                     <div>{plot_img_tag_pm25}</div>
                     <div>{plot_img_tag_rh}</div>
                     <div>{plot_img_tag_temp}</div>
@@ -251,7 +265,7 @@ def create_pdf() -> None:
                 html_content += f"""
                 <div>
                     <p class='sensors-name'>Sensor <b>{sensor_name}</b></p>
-                    <p class='sensor-location' style='font-size:18px;'><b>{sensors_locs[sensor_name]} ({latitude}, {longitude})</b></p>
+                    <p class='sensor-location' style='font-size:18px;'><b>{sensors_locs.get(sensor_name, '')} ({latitude}, {longitude})</b></p>
                     <div>{plot_img_tag_pm25}</div>
                     <div>{plot_img_tag_rh}</div>
                     <div>{plot_img_tag_temp}</div>
