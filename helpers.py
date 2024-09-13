@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import NamedTuple, List, Dict
 import csv
 
-cwd : str = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center"
+cwd : str = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center" if "dhawal" in os.getcwd() else os.getcwd()
 level_folder : str = "Level 0"
 
 country_names = {
@@ -19,7 +19,7 @@ def get_date_folder_name() -> str:
 
     this_month = pd.Timestamp.today().strftime("%b-%Y")
     month_part = '1' if pd.Timestamp.today().day <= 16 else '2'
-    return f"{this_month}-{month_part}"
+    return f"{this_month}-{month_part}" if "dhawal" in os.getcwd() else "Jul-2024-2"
 
 date_folder_name : str = get_date_folder_name()
 

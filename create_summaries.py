@@ -184,6 +184,10 @@ def get_data(country: str) -> Tuple[
 
 
 def create_pdf() -> None:
+    
+
+
+
     for country in ['KZ', 'KG', 'UZ']:
         print(f"Creating summary pdf for {country} ...")
         try:
