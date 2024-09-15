@@ -1,4 +1,5 @@
 import os
+import re
 import pandas as pd
 import numpy as np
 import pdfkit
@@ -132,7 +133,11 @@ def get_data(country: str) -> Tuple[
 
     for sensor_type in ['Indoor Sensors', 'Outdoor Sensors']:
         for sensor in os.listdir(f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}"):
-            sensor_name: str = sensor.split('-')[0]
+            match = re.match(r'([A-Za-z0-9-]+)-\w+-\d{4}', sensor)
+            if match:
+                sensor_name: str = match.group(1)
+            else:
+                sensor_name: str = sensor.split('-')[0]
             df: pd.DataFrame = pd.read_csv(f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}/{sensor}")
             if df.empty:
                 status = False
@@ -184,9 +189,6 @@ def get_data(country: str) -> Tuple[
 
 
 def create_pdf() -> None:
-    
-
-
 
     for country in ['KZ', 'KG', 'UZ']:
         print(f"Creating summary pdf for {country} ...")
