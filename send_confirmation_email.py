@@ -15,6 +15,10 @@ from email import encoders
 
 from helpers import get_sensors_info, date_folder_name, cwd
 
+import socket
+timeout_in_sec = 60*5 # 3 minutes timeout limit
+socket.setdefaulttimeout(timeout_in_sec)
+
 message_recepients = "dhawal.shah@nu.edu.kz, michael.bergin@duke.edu, sakengali.kazhiyev@nu.edu.kz, baglan.zhubatkanov@nu.edu.kz, rauan.arstangaliyev@nu.edu.kz"
 
 def get_credentials():
@@ -170,7 +174,7 @@ def send_email_main(is_successful : bool = True, error : str = ''):
 
         for cnt in ['KZ', 'KG', 'UZ']:
             file_path_list.append(f"{cwd}/Central Asian Data/{cnt}/{level_folder}/{date_folder_name}/{cnt.lower()}_info.txt")
-            file_path_list.append(f"{cwd}/Central Asian Data/{cnt}/{level_folder}/{date_folder_name}/{cnt.lower()}_summary.pdf")
+            #file_path_list.append(f"{cwd}/Central Asian Data/{cnt}/{level_folder}/{date_folder_name}/{cnt.lower()}_summary.pdf")
 
         message_text = f"""
             <p>Dear Members of the NU Air Quality Project</p>
@@ -194,6 +198,8 @@ def send_email_main(is_successful : bool = True, error : str = ''):
         """
 
         send_email(message_text=message_text)
+
+    socket.setdefaulttimeout(None)
 
 
 
