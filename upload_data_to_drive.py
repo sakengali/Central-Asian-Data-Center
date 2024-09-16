@@ -245,8 +245,8 @@ def main_upload():
             upload_info_file(creds, country, date_folder_ids[country])
 
             # upload uptime.pdf
-            print(f'Uploading {country.lower()}_uptime.txt file')
-            upload_info_file(creds, country, date_folder_ids[country])
+            print(f'Uploading {country.lower()}_uptime.pdf file')
+            upload_uptime_file(creds, country, date_folder_ids[country])
 
             # upload summary.pdf
             print(f'Uploading {country.lower()}_summary.pdf file')
