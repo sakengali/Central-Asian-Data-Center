@@ -43,7 +43,7 @@ def get_access_token(country : str, config : Dict[str, str]) -> str:
 
 def get_date() -> tuple:
     this_month = pd.Timestamp.today().strftime("%b-%Y")
-    month_part = '1' if pd.Timestamp.today().day <= 16 else '2'
+    month_part = '1' if pd.Timestamp.today().day <= 15 else '2'
 
     return this_month, month_part 
 
