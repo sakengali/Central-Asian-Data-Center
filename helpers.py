@@ -19,7 +19,7 @@ def get_date_folder_name() -> str:
 
     this_month = pd.Timestamp.today().strftime("%b-%Y")
     month_part = '1' if pd.Timestamp.today().day <= 16 else '2'
-    return f"{this_month}-{month_part}" if "dhawal" in os.getcwd() else "Jul-2024-2"
+    return f"{this_month}-{month_part}" if "dhawal" in os.getcwd() else "Aug-2024-2"
 
 date_folder_name : str = get_date_folder_name()
 

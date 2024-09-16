@@ -214,6 +214,18 @@ def upload_summary_file(creds, country : str, date_folder_id : str):
 
     return None
 
+def upload_uptime_file(creds, country : str, date_folder_id : str):
+    """
+    uploads {country}_uptime.pdf file to the date folder
+    """
+
+    level_folder = "Level 0"
+
+    os.chdir(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}")
+    upload_file_to_folder(creds, f"{country.lower()}_uptime.pdf", parent_folder_ids=[date_folder_id])
+
+    return None
+
 def main_upload():
     creds = get_credentials()
 
@@ -232,8 +244,14 @@ def main_upload():
             print(f'Uploading {country.lower()}_info.txt file')
             upload_info_file(creds, country, date_folder_ids[country])
 
+            # upload uptime.pdf
+            print(f'Uploading {country.lower()}_uptime.txt file')
+            upload_info_file(creds, country, date_folder_ids[country])
+
+            # upload summary.pdf
             print(f'Uploading {country.lower()}_summary.pdf file')
             upload_summary_file(creds, country, date_folder_ids[country])
+            
         except FileNotFoundError as e:
             print(f"Couldn't upload data for {country}. Error: {e}")
 

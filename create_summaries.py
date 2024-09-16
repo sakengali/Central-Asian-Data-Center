@@ -14,6 +14,7 @@ from typing import List, Tuple, Dict
 from datetime import datetime, timedelta
 from helpers import get_date_folder_name
 from helpers import country_names, cwd
+from create_uptime_pdf import calculate_uptime
 
 #getting the correct path to this directory
 BASE_DIR: str = cwd
@@ -188,11 +189,14 @@ def get_data(country: str) -> Tuple[
     return data_indoor_sorted, data_outdoor_sorted, summary_indoor, summary_outdoor
 
 
-def create_pdf() -> None:
+def create_summary_pdf() -> None:
 
     for country in ['KZ', 'KG', 'UZ']:
         print(f"Creating summary pdf for {country} ...")
         try:
+            #getting uptime data of sensors
+            uptimes : Dict[str, float] = calculate_uptime(country)
+
             data_indoor, data_outdoor, summary_indoor, summary_outdoor = get_data(country)
             try:
                 with open(f"{cwd}/config.json", "r") as f:
@@ -252,6 +256,7 @@ def create_pdf() -> None:
                 <div>
                     <p class='sensors-name'>Sensor <b>{sensor_name}</b></p>
                     <p class='sensor-location' style='font-size:18px;'> <b>{sensors_locs.get(sensor_name, '')} ({latitude}, {longitude})</b></p>
+                    <p class='sensor-location' style='font-size:18px;'> Uptime value: {uptimes.get(sensor_name)}% <p>
                     <div>{plot_img_tag_pm25}</div>
                     <div>{plot_img_tag_rh}</div>
                     <div>{plot_img_tag_temp}</div>
@@ -295,7 +300,7 @@ def create_pdf() -> None:
             <body>
             """
             html_content += f"""
-            <p> No data about the location of the sensors in {country_names[country]} were found. </p>
+            <p> Could not retrieve data for the sensors in {country_names[country]}. </p>
             """
             html_content += "</body></html>"
             output_pdf_path: str = f"{BASE_DIR}/Central Asian Data/{country}/Level 0/{date_folder_name}/{country.lower()}_summary.pdf"
