@@ -19,7 +19,7 @@ import socket
 timeout_in_sec = 60*5 # 3 minutes timeout limit
 socket.setdefaulttimeout(timeout_in_sec)
 
-message_recepients = "dhawal.shah@nu.edu.kz, michael.bergin@duke.edu, sakengali.kazhiyev@nu.edu.kz, baglan.zhubatkanov@nu.edu.kz, rauan.arstangaliyev@nu.edu.kz"
+message_recepients = "dhawal.shah@nu.edu.kz, michael.bergin@duke.edu, trailokaya.bajgain@duke.edu, kuanysh.moldabekov@nu.edu.kz, sakengali.kazhiyev@nu.edu.kz, baglan.zhubatkanov@nu.edu.kz, rauan.arstangaliyev@nu.edu.kz"
 
 def get_credentials():
     """Shows basic usage of the Gmail API.
