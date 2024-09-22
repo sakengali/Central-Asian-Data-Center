@@ -3,9 +3,14 @@ import os
 from datetime import datetime
 from typing import NamedTuple, List, Dict
 import csv
+import gspread
+import json
 
 cwd : str = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center" if "dhawal" in os.getcwd() else os.getcwd()
 level_folder : str = "Level 0"
+
+#service account to obtain information from google spreadsheets
+gc = gspread.service_account(filename='./cosmic-talent-416001-3c711f8ccf2e.json')
 
 country_names = {
     'KZ': 'Kazakhstan',
@@ -29,7 +34,10 @@ class Sensor(NamedTuple):
     country : str
     is_deployed : bool
     location : str
-    owner : str
+    city : str
+    did_change_location : str
+    calibration_factor : float
+    updates : List
     
     def is_responding(self):
         sensor_file_name = f"{self.name}-{date_folder_name[:8]}.csv"
@@ -40,6 +48,7 @@ class Sensor(NamedTuple):
     def is_turned_off(self):
         return self.is_deployed and not self.is_responding()
 
+
 def get_sensors_info(country : str) -> List[Sensor]:
 
     """ 
@@ -49,20 +58,28 @@ def get_sensors_info(country : str) -> List[Sensor]:
 
     sensors : Dict[str, Sensor] = {}
     
-    with open(f"{cwd}/sensors_info/{country.lower()}_deployed_sensors.csv", mode='r', newline='') as file:
-        reader = csv.DictReader(file)
-        
-        for row in reader:
-            sensor = Sensor(
-                name = row['sensor_name'],
-                sensor_type=row['sensor_type'],
-                country = row['country'].upper(),
-                is_deployed=bool(int((row['is_deployed']))),
-                location=row['location'],
-                owner=row['owner'],
-            )
-            
-            sensors[sensor.name] = sensor
+    with open(f"{cwd}/config.json", "r") as f:
+        config = json.load(f)
+        sheet_key = config[f"{str.lower(country)}_client_spreadsheet"]
+    print(f"Retrieving data for {country}")
+    sh = gc.open_by_key(sheet_key)
+    
+    for w in sh.worksheets()[:2]:
+        data = w.get_all_records()
+        #print(data)
+        sensors.update(
+            {row['Sensor Name'] : Sensor(
+                name = row['Sensor Name'],
+                sensor_type = row['Sensor Type'],
+                country = country,
+                is_deployed = row['Is Deployed'],
+                location = row['Location'],
+                city = row['City'],
+                did_change_location = row['Did Change Location'],
+                calibration_factor = row['Calibration Factor'],
+                updates = [upd for upd in row['Updates'].split(';')]
+            ) for row in data}
+        )
     
     return sensors
 
@@ -105,8 +122,9 @@ def create_info_file():
                 f.write(f"Date Folder Name: {date_folder_name}\n\n")
                 f.write(f"Level Folder: {level_folder}\n\n")
                 f.write("Sensor\t\tLocation\t\t\tStatus\t\t\tResponse\n")
-
-            try:
+            
+            #information for updated info file version is available only for KZ
+            if country == 'KZ': 
                 sensors = get_sensors_info(country)
                 for sensor_type in ['Indoor Sensors', 'Outdoor Sensors']:
                     with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_info.txt", 'a') as f:
@@ -118,8 +136,8 @@ def create_info_file():
                         with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_info.txt", 'a') as f:
                             f.write(sensor_line_v1(sensor) + "\n")
 
-            except FileNotFoundError as e:
-                print(e)
+            #KG and UZ will get the old verison of the info files
+            else:
                 for sensor_type in ['Indoor Sensors', 'Outdoor Sensors']:
                     with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_info.txt", 'a') as f:
                         f.write(f"\n({sensor_type}):\n")
