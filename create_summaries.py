@@ -12,7 +12,7 @@ import base64
 from io import BytesIO
 from typing import List, Tuple, Dict
 from datetime import datetime, timedelta
-from helpers import get_date_folder_name
+from helpers import get_date_folder_name, get_sensors_info
 from helpers import country_names, cwd
 from create_uptime_pdf import calculate_uptime
 
@@ -197,20 +197,12 @@ def create_summary_pdf() -> None:
             #getting uptime data of sensors
             uptimes : Dict[str, float] = calculate_uptime(country)
 
+            #getting data for sensors
             data_indoor, data_outdoor, summary_indoor, summary_outdoor = get_data(country)
-            try:
-                with open(f"{cwd}/config.json", "r") as f:
-                    config = json.load(f)
-                    sheet_key = config[f"{str.lower(country)}_client_spreadsheet"]
-                sh = gc.open_by_key(sheet_key)
-                
-                sensors_locs: Dict = {}
-                for w in sh.worksheets():
-                    tmp_name: List = w.col_values(1)[1:]
-                    tmp_loc: List = w.col_values(6)[1:]
-                    sensors_locs.update(dict(zip(tmp_name, tmp_loc)))            
-            except:
-                sensors_locs: Dict = {}
+            
+            #getting info of sensors of this country
+            sensors_info = get_sensors_info(country)
+            
             html_content: str = """
             <html>
             <head>
@@ -255,8 +247,17 @@ def create_summary_pdf() -> None:
                 html_content += f"""
                 <div>
                     <p class='sensors-name'>Sensor <b>{sensor_name}</b></p>
-                    <p class='sensor-location' style='font-size:18px;'> <b>{sensors_locs.get(sensor_name, '')} ({latitude}, {longitude})</b></p>
-                    <p class='sensor-location' style='font-size:18px;'> Uptime value: {uptimes.get(sensor_name)}% <p>
+                    <p class='sensor-location' style='font-size:18px;'><b>{sensors_info[sensor_name].location} ({latitude}, {longitude})</b></p>
+                    <p class='sensor-location' style='font-size:18px;'> City: {sensors_info[sensor_name].city} </p>
+                    <p class='sensor-location' style='font-size:18px;'> Uptime value: {uptimes.get(sensor_name)}% </p>
+                    <p class='sensor-location' style='font-size:18px;'> <b>Updates</b>:
+                """
+                for upd in sensors_info[sensor_name].updates:
+                    html_content += f"<br> {upd}"
+                
+                html_content +=f"""
+                    </p>
+                    <p><b>Graphs</b></p>
                     <div>{plot_img_tag_pm25}</div>
                     <div>{plot_img_tag_rh}</div>
                     <div>{plot_img_tag_temp}</div>
@@ -276,7 +277,17 @@ def create_summary_pdf() -> None:
                 html_content += f"""
                 <div>
                     <p class='sensors-name'>Sensor <b>{sensor_name}</b></p>
-                    <p class='sensor-location' style='font-size:18px;'><b>{sensors_locs.get(sensor_name, '')} ({latitude}, {longitude})</b></p>
+                    <p class='sensor-location' style='font-size:18px;'><b>{sensors_info[sensor_name].location} ({latitude}, {longitude})</b></p>
+                    <p class='sensor-location' style='font-size:18px;'> City: {sensors_info[sensor_name].city} </p>
+                    <p class='sensor-location' style='font-size:18px;'> Uptime value: {uptimes.get(sensor_name)}% </p>
+                    <p class='sensor-location' style='font-size:18px;'> <b>Updates</b>:
+                """
+                for upd in sensors_info[sensor_name].updates:
+                    html_content += f"<br> {upd}"
+                
+                html_content +=f"""
+                    </p>
+                    <p><b>Graphs</b></p>
                     <div>{plot_img_tag_pm25}</div>
                     <div>{plot_img_tag_rh}</div>
                     <div>{plot_img_tag_temp}</div>
