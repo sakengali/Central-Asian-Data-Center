@@ -10,7 +10,7 @@ cwd : str = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-C
 level_folder : str = "Level 0"
 
 #service account to obtain information from google spreadsheets
-gc = gspread.service_account(filename='./cosmic-talent-416001-3c711f8ccf2e.json')
+gc = gspread.service_account(filename=f'{cwd}/cosmic-talent-416001-3c711f8ccf2e.json')
 
 country_names = {
     'KZ': 'Kazakhstan',
@@ -24,7 +24,7 @@ def get_date_folder_name() -> str:
 
     this_month = pd.Timestamp.today().strftime("%b-%Y")
     month_part = '1' if pd.Timestamp.today().day <= 15 else '2'
-    return f"{this_month}-{month_part}" if "dhawal" in os.getcwd() else "Aug-2024-2"
+    return f"{this_month}-{month_part}" if "dhawal" in os.getcwd() else "Sep-2024-2"
 
 date_folder_name : str = get_date_folder_name()
 

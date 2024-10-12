@@ -183,7 +183,7 @@ def send_email_main(is_successful : bool = True, error : str = ''):
             
             <p></p>
 
-            <p>WARNING: There are some sensors that are deployed but not sending any data. <br>For Kazakhstan: {get_list_off_sensors('kz')} </p>
+            <p>WARNING: There are some sensors that are deployed but not sending any data. <br>For Kazakhstan: {get_list_off_sensors('KZ')} </p>
             
             <p>Best,</p>
         """    

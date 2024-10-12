@@ -39,7 +39,7 @@ def main():
             except Exception as error:
                 send_email_main(is_successful=False, error=error)
     else:           # all other months
-        if today == 15 or today == 30:
+        if today == 15 or today == 29:
             try:
                 download_data()
                 create_info_file()
