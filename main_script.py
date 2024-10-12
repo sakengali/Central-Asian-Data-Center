@@ -4,6 +4,7 @@ from send_confirmation_email import send_email_main
 from helpers import create_info_file
 from create_summaries import create_summary_pdf
 from create_uptime_pdf import create_uptime_graph
+from clean import clean_main
 import pandas as pd
 
 # today's day and month
@@ -31,6 +32,7 @@ def main():
         if today == 15 or today == 28:
             try:
                 download_data()
+                clean_main()
                 create_info_file()
                 create_uptime_graph()
                 create_summary_pdf()
@@ -42,6 +44,7 @@ def main():
         if today == 15 or today == 29:
             try:
                 download_data()
+                clean_main()
                 create_info_file()
                 create_uptime_graph()
                 create_summary_pdf()

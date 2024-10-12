@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 from helpers import get_date_folder_name, get_sensors_info
 from helpers import country_names, cwd
 from create_uptime_pdf import calculate_uptime
+from location_pick import get_nearest_city
 
 #getting the correct path to this directory
 BASE_DIR: str = cwd
@@ -247,7 +248,7 @@ def create_summary_pdf() -> None:
                 html_content += f"""
                 <div>
                     <p class='sensors-name'>Sensor <b>{sensor_name}</b></p>
-                    <p class='sensor-location' style='font-size:18px;'><b>{sensors_info[sensor_name].location} ({latitude}, {longitude})</b></p>
+                    <p class='sensor-location' style='font-size:18px;'><b>{get_nearest_city(float(latitude), float(longitude), country)}, {sensors_info[sensor_name].location} ({latitude}, {longitude})</b></p>
                     <p class='sensor-location' style='font-size:18px;'> City: {sensors_info[sensor_name].city} </p>
                     <p class='sensor-location' style='font-size:18px;'> Uptime value: {uptimes.get(sensor_name)}% </p>
                     <p class='sensor-location' style='font-size:18px;'> <b>Updates</b>:
@@ -277,7 +278,7 @@ def create_summary_pdf() -> None:
                 html_content += f"""
                 <div>
                     <p class='sensors-name'>Sensor <b>{sensor_name}</b></p>
-                    <p class='sensor-location' style='font-size:18px;'><b>{sensors_info[sensor_name].location} ({latitude}, {longitude})</b></p>
+                    <p class='sensor-location' style='font-size:18px;'><b>{get_nearest_city(float(latitude), float(longitude), country)}, {sensors_info[sensor_name].location} ({latitude}, {longitude})</b></p>
                     <p class='sensor-location' style='font-size:18px;'> City: {sensors_info[sensor_name].city} </p>
                     <p class='sensor-location' style='font-size:18px;'> Uptime value: {uptimes.get(sensor_name)}% </p>
                     <p class='sensor-location' style='font-size:18px;'> <b>Updates</b>:
@@ -297,7 +298,7 @@ def create_summary_pdf() -> None:
                 """
             html_content += "</body></html>"
 
-            output_pdf_path: str = f"{BASE_DIR}/Central Asian Data/{country}/Level 0/{date_folder_name}/{country.lower()}_summary.pdf"
+            output_pdf_path: str = f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_summary.pdf"
             pdfkit.from_string(html_content, output_pdf_path)
             print(f"Summary pdf created successfully for {country}")
         except Exception as e:
@@ -314,7 +315,7 @@ def create_summary_pdf() -> None:
             <p> Could not retrieve data for the sensors in {country_names[country]}. </p>
             """
             html_content += "</body></html>"
-            output_pdf_path: str = f"{BASE_DIR}/Central Asian Data/{country}/Level 0/{date_folder_name}/{country.lower()}_summary.pdf"
+            output_pdf_path: str = f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_summary.pdf"
             pdfkit.from_string(html_content, output_pdf_path)
             print(f"Error processing data for {country}: {e}. An empty pdf was created.")
             continue
