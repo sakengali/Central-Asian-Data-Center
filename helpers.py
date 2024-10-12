@@ -24,7 +24,7 @@ def get_date_folder_name() -> str:
 
     this_month = pd.Timestamp.today().strftime("%b-%Y")
     month_part = '1' if pd.Timestamp.today().day <= 15 else '2'
-    return f"{this_month}-{month_part}" if "dhawal" in os.getcwd() else "Sep-2024-2"
+    return f"{this_month}-{month_part}" if "dhawal" in os.getcwd() else "Oct-2024-1"
 
 date_folder_name : str = get_date_folder_name()
 
@@ -114,56 +114,56 @@ def create_info_file():
 
     """ creates the {country}_info.txt file """
 
-    try:
-        for country in ['KZ', 'KG', 'UZ']:
-
-            with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_info.txt", 'w') as f:
-                f.write(f"The data of {country} sensors was downloaded on {datetime.now()}\n\n")
-                f.write(f"Date Folder Name: {date_folder_name}\n\n")
-                f.write(f"Level Folder: {level_folder}\n\n")
-                f.write("Sensor\t\tLocation\t\t\tStatus\t\t\tResponse\n")
-            
-            #information for updated info file version is available only for KZ
-            if country == 'KZ': 
-                sensors = get_sensors_info(country)
-                for sensor_type in ['Indoor Sensors', 'Outdoor Sensors']:
-                    with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_info.txt", 'a') as f:
-                        f.write(f"\n({sensor_type}):\n")
-                    for sensor in sorted(os.listdir(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}")):
-                        sensor_name : str = sensor.split('-')[0]
-                        sensor : Sensor = sensors[sensor_name]
-
+    for country in ['KZ', 'KG', 'UZ']:
+        for level_folder in ['Level 0', 'Level 1', 'Level 2']:
+            try:
+                with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_info.txt", 'w') as f:
+                    f.write(f"The data of {country} sensors was downloaded on {datetime.now()}\n\n")
+                    f.write(f"Date Folder Name: {date_folder_name}\n\n")
+                    f.write(f"Level Folder: {level_folder}\n\n")
+                    f.write("Sensor\t\tLocation\t\t\tStatus\t\t\tResponse\n")
+                
+                #information for updated info file version is available only for KZ
+                if country == 'KZ': 
+                    sensors = get_sensors_info(country)
+                    for sensor_type in ['Indoor Sensors', 'Outdoor Sensors']:
                         with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_info.txt", 'a') as f:
-                            f.write(sensor_line_v1(sensor) + "\n")
+                            f.write(f"\n({sensor_type}):\n")
+                        for sensor in sorted(os.listdir(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}")):
+                            sensor_name : str = sensor.split('-')[0]
+                            sensor : Sensor = sensors[sensor_name]
 
-            #KG and UZ will get the old verison of the info files
-            else:
-                for sensor_type in ['Indoor Sensors', 'Outdoor Sensors']:
-                    with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_info.txt", 'a') as f:
-                        f.write(f"\n({sensor_type}):\n")
-                    for sensor in sorted(os.listdir(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}")):
-                        if country == 'UZ':
-                            if sensor_type == 'Indoor Sensors':
-                                sensor_name = sensor.split('-')[:4]
-                                sensor_name = sensor_name[0] + '-' + sensor_name[1] + '-' + sensor_name[2] + '-' + sensor_name[3]
+                            with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_info.txt", 'a') as f:
+                                f.write(sensor_line_v1(sensor) + "\n")
+
+                #KG and UZ will get the old verison of the info files
+                else:
+                    for sensor_type in ['Indoor Sensors', 'Outdoor Sensors']:
+                        with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_info.txt", 'a') as f:
+                            f.write(f"\n({sensor_type}):\n")
+                        for sensor in sorted(os.listdir(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}")):
+                            if country == 'UZ':
+                                if sensor_type == 'Indoor Sensors':
+                                    sensor_name = sensor.split('-')[:4]
+                                    sensor_name = sensor_name[0] + '-' + sensor_name[1] + '-' + sensor_name[2] + '-' + sensor_name[3]
+                                else:
+                                    sensor_name = sensor.split('-')[:3]
+                                    sensor_name = sensor_name[0] + '-' + sensor_name[1] + '-' + sensor_name[2]
                             else:
-                                sensor_name = sensor.split('-')[:3]
-                                sensor_name = sensor_name[0] + '-' + sensor_name[1] + '-' + sensor_name[2]
-                        else:
-                            sensor_name = sensor.split('-')[0]
+                                sensor_name = sensor.split('-')[0]
 
-                        df = pd.read_csv(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}/{sensor}")
-                        if df.empty:
-                            status = "Not Responding (Empty Data)"
-                            with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_info.txt", 'a') as f:
-                                f.write(sensor_line_v0(sensor_name, status) + "\n")
-                        else:
-                            status = "Responding (Data Available)"
-                            with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_info.txt", 'a') as f:
-                                f.write(sensor_line_v0(sensor_name, status) + "\n")
+                            df = pd.read_csv(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}/{sensor}")
+                            if df.empty:
+                                status = "Not Responding (Empty Data)"
+                                with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_info.txt", 'a') as f:
+                                    f.write(sensor_line_v0(sensor_name, status) + "\n")
+                            else:
+                                status = "Responding (Data Available)"
+                                with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_info.txt", 'a') as f:
+                                    f.write(sensor_line_v0(sensor_name, status) + "\n")
 
-    except FileNotFoundError as e:
-        print(f"Couldn't create log file for {country}. Error: {e}")
+            except FileNotFoundError as e:
+                print(f"Couldn't create log file for {country} {level_folder}. Error: {e}")
 
     return
 

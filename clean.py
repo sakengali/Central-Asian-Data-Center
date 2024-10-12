@@ -48,19 +48,20 @@ def filter_row(obj):
 
 
 def filter_table(df: pd.DataFrame, clean_level: str, country: str, sensor_type: str, sensor_name: str) -> None:
+    df1 = df.copy()
     df = df.drop([0], axis=0)
-    df["Timestamp"] = pd.to_datetime(df['Timestamp'], format='%Y-%m-%dT%H:%M:%SZ')
-    first_hour = df.loc[1, "Timestamp"].hour
+    df1["Timestamp"] = pd.to_datetime(df1['Timestamp'], format='%Y-%m-%dT%H:%M:%SZ')
+    first_hour = df1.loc[1, "Timestamp"].hour
 
     i = 2
     while True:
-        if df.loc[i, "Timestamp"].hour != first_hour:
-            df = df.drop(range(1, i), axis=0)
+        if df1.loc[i, "Timestamp"].hour != first_hour:
+            df1 = df1.drop(range(1, i), axis=0)
             break
         i += 1
 
-    start_time = df.loc[df.index[0], 'Timestamp']
-    second_time = df.loc[df.index[1], 'Timestamp']
+    start_time = df1.loc[df1.index[0], 'Timestamp']
+    second_time = df1.loc[df1.index[1], 'Timestamp']
     interval = (second_time - start_time).total_seconds()
 
     if interval <= 60:
@@ -73,8 +74,8 @@ def filter_table(df: pd.DataFrame, clean_level: str, country: str, sensor_type: 
         threshold = float('inf') 
 
     exclude_indices = []
-    for ind in df.index:
-        if not filter_row(df.loc[ind]) or df.loc[ind, "PM 2.5"] > threshold:
+    for ind in df1.index:
+        if not filter_row(df1.loc[ind]) or df1.loc[ind, "PM 2.5"] > threshold:
             exclude_indices.append(ind)
 
     # Filter rows that pass the preprocess_row check and PM 2.5 threshold

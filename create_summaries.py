@@ -22,7 +22,6 @@ BASE_DIR: str = cwd
 
 gc = gspread.service_account(filename='./cosmic-talent-416001-3c711f8ccf2e.json')
 
-level_folder: str = "Level 0"
 date_folder_name: str = get_date_folder_name()
 
 
@@ -121,7 +120,7 @@ def summary(data: List[Dict[str, pd.DataFrame]], measuring: str, freq: str = 'h'
     return f"data:image/png;base64,{img_base64}"
 
 
-def get_data(country: str) -> Tuple[
+def get_data(country: str, level_folder: str) -> Tuple[
                             List[Tuple[str, str, str, str, bool, Tuple[str, str, str, str]]], 
                             List[Tuple[str, str, str, str, bool, Tuple[str, str, str, str]]],
                             Dict[str, str], 
@@ -193,129 +192,134 @@ def get_data(country: str) -> Tuple[
 def create_summary_pdf() -> None:
 
     for country in ['KZ', 'KG', 'UZ']:
-        print(f"Creating summary pdf for {country} ...")
-        try:
-            #getting uptime data of sensors
-            uptimes : Dict[str, float] = calculate_uptime(country)
+        for level_folder in ['Level 0', 'Level 1', 'Level 2']:
+            print(f"Creating summary pdf for {country} {level_folder} ...")
+            try:
+                #getting uptime data of sensors
+                uptimes : Dict[str, float] = calculate_uptime(country, level_folder)
 
-            #getting data for sensors
-            data_indoor, data_outdoor, summary_indoor, summary_outdoor = get_data(country)
-            
-            #getting info of sensors of this country
-            sensors_info = get_sensors_info(country)
-            
-            html_content: str = """
-            <html>
-            <head>
-                <style>
-                    body { background-color: white; font-family: 'Times New Roman', Times, serif; }
-                    .page-break { page-break-after: always; }
-                    .sensor-type { font-size: 24px; font-weight: bold; }
-                    .sensors-name { font-size: 20px; }
-                    .sensor-location { font-size: 18px; }
-                    .intro { font-size: 20px;}
-                </style>
-            </head>
-            <body>
-            """
-            html_content += f"""
-            <div class='intro'>
-                <div style="font-size: 24px; font-weight: bold; text-align: center; margin-left: 20%; margin-right: 20%;">Summary of all sensors in {country_names[country]} for the period of {get_period()}</div>
-                Date: {datetime.today().strftime("%m-%d-%Y")}<br><br>
-                Summary of Indoor Sensors:<br>
-                <div><img src="{summary_indoor['PM 2.5']}" width="950"></div>
-                <div><img src="{summary_indoor['RH']}" width="950"></div>
-                <div><img src="{summary_indoor['Temperture']}" width="950"></div>
-                <div><img src="{summary_indoor['CO2']}" width="950"></div>
-            </div>
-            <div class="page-break"></div>
-            <div class='intro'>
-                <p>Summary of Outdoor Sensors:</p>
-                <div><img src="{summary_outdoor['PM 2.5']}" width="950"></div>
-                <div><img src="{summary_outdoor['RH']}" width="950"></div>
-                <div><img src="{summary_outdoor['Temperture']}" width="950"></div
-            </div>
-            <div class="page-break"></div>
-            """
-            html_content += "<p class='sensor-type'>Indoor sensors</p>"
-            for sensor_name, latitude, longitude, sensor_type, status, plot_path in data_indoor:
-                if not status:
-                    continue
-                plot_img_tag_pm25: str = f'<img src="{plot_path[0]}" width="950">' if plot_path[0] else "No Data"
-                plot_img_tag_rh: str = f'<img src="{plot_path[1]}" width="950">' if plot_path[1] else ""
-                plot_img_tag_temp: str = f'<img src="{plot_path[2]}" width="950">' if plot_path[2] else ""
-                plot_img_tag_co2: str = f'<img src="{plot_path[3]}" width="950">' if plot_path[3] else ""
-                html_content += f"""
-                <div>
-                    <p class='sensors-name'>Sensor <b>{sensor_name}</b></p>
-                    <p class='sensor-location' style='font-size:18px;'><b>{get_nearest_city(float(latitude), float(longitude), country)}, {sensors_info[sensor_name].location} ({latitude}, {longitude})</b></p>
-                    <p class='sensor-location' style='font-size:18px;'> City: {sensors_info[sensor_name].city} </p>
-                    <p class='sensor-location' style='font-size:18px;'> Uptime value: {uptimes.get(sensor_name)}% </p>
-                    <p class='sensor-location' style='font-size:18px;'> <b>Updates</b>:
-                """
-                for upd in sensors_info[sensor_name].updates:
-                    html_content += f"<br> {upd}"
+                #getting data for sensors
+                data_indoor, data_outdoor, summary_indoor, summary_outdoor = get_data(country, level_folder)
                 
-                html_content +=f"""
-                    </p>
-                    <p><b>Graphs</b></p>
-                    <div>{plot_img_tag_pm25}</div>
-                    <div>{plot_img_tag_rh}</div>
-                    <div>{plot_img_tag_temp}</div>
-                    <div>{plot_img_tag_co2}</div>
+                #getting info of sensors of this country
+                sensors_info = get_sensors_info(country)
+                
+                html_content: str = """
+                <html>
+                <head>
+                    <style>
+                        body { background-color: white; font-family: 'Times New Roman', Times, serif; }
+                        .page-break { page-break-after: always; }
+                        .sensor-type { font-size: 24px; font-weight: bold; }
+                        .sensors-name { font-size: 20px; }
+                        .sensor-location { font-size: 18px; }
+                        .intro { font-size: 20px;}
+                    </style>
+                </head>
+                <body>
+                """
+                html_content += f"""
+                <div class='intro'>
+                    <div style="font-size: 24px; font-weight: bold; text-align: center; margin-left: 20%; margin-right: 20%;">Summary of all sensors in {country_names[country]} for the period of {get_period()}</div>
+                    Date: {datetime.today().strftime("%m-%d-%Y")}<br><br>
+                    Summary of Indoor Sensors:<br>
+                    <div><img src="{summary_indoor['PM 2.5']}" width="950"></div>
+                    <div><img src="{summary_indoor['RH']}" width="950"></div>
+                    <div><img src="{summary_indoor['Temperture']}" width="950"></div>
+                    <div><img src="{summary_indoor['CO2']}" width="950"></div>
+                </div>
+                <div class="page-break"></div>
+                <div class='intro'>
+                    <p>Summary of Outdoor Sensors:</p>
+                    <div><img src="{summary_outdoor['PM 2.5']}" width="950"></div>
+                    <div><img src="{summary_outdoor['RH']}" width="950"></div>
+                    <div><img src="{summary_outdoor['Temperture']}" width="950"></div
                 </div>
                 <div class="page-break"></div>
                 """
-            html_content += "<p class='sensor-type'>Outdoor sensors</p>"
-            for sensor_name, latitude, longitude, sensor_type, status, plot_path in data_outdoor:
-                if not status:
-                    continue
-                status_text: str = "Responding (Data Available)" if status else "Not Responding (Empty Data)"
-                plot_img_tag_pm25: str = f'<img src="{plot_path[0]}" width="950">' if plot_path[0] else "No Data"
-                plot_img_tag_rh: str = f'<img src="{plot_path[1]}" width="950">' if plot_path[1] else ""
-                plot_img_tag_temp: str = f'<img src="{plot_path[2]}" width="950">' if plot_path[2] else ""
-                plot_img_tag_co2: str = f'<img src="{plot_path[3]}" width="950">' if plot_path[3] else ""
-                html_content += f"""
-                <div>
-                    <p class='sensors-name'>Sensor <b>{sensor_name}</b></p>
-                    <p class='sensor-location' style='font-size:18px;'><b>{get_nearest_city(float(latitude), float(longitude), country)}, {sensors_info[sensor_name].location} ({latitude}, {longitude})</b></p>
-                    <p class='sensor-location' style='font-size:18px;'> City: {sensors_info[sensor_name].city} </p>
-                    <p class='sensor-location' style='font-size:18px;'> Uptime value: {uptimes.get(sensor_name)}% </p>
-                    <p class='sensor-location' style='font-size:18px;'> <b>Updates</b>:
-                """
-                for upd in sensors_info[sensor_name].updates:
-                    html_content += f"<br> {upd}"
-                
-                html_content +=f"""
-                    </p>
-                    <p><b>Graphs</b></p>
-                    <div>{plot_img_tag_pm25}</div>
-                    <div>{plot_img_tag_rh}</div>
-                    <div>{plot_img_tag_temp}</div>
-                    <div>{plot_img_tag_co2}</div>
-                </div>
-                <div class="page-break"></div>
-                """
-            html_content += "</body></html>"
+                html_content += "<p class='sensor-type'>Indoor sensors</p>"
+                for sensor_name, latitude, longitude, sensor_type, status, plot_path in data_indoor:
+                    if not status:
+                        continue
+                    plot_img_tag_pm25: str = f'<img src="{plot_path[0]}" width="950">' if plot_path[0] else "No Data"
+                    plot_img_tag_rh: str = f'<img src="{plot_path[1]}" width="950">' if plot_path[1] else ""
+                    plot_img_tag_temp: str = f'<img src="{plot_path[2]}" width="950">' if plot_path[2] else ""
+                    plot_img_tag_co2: str = f'<img src="{plot_path[3]}" width="950">' if plot_path[3] else ""
+                    html_content += f"""
+                    <div>
+                        <p class='sensors-name'>Sensor <b>{sensor_name}</b></p>
+                        <p class='sensor-location' style='font-size:18px;'><b>{get_nearest_city(float(latitude), float(longitude), country)}, {sensors_info[sensor_name].location} ({latitude}, {longitude})</b></p>
+                        <p class='sensor-location' style='font-size:18px;'> City: {sensors_info[sensor_name].city} </p>
+                        <p class='sensor-location' style='font-size:18px;'> Uptime value: {uptimes.get(sensor_name)}% </p>
+                        <p class='sensor-location' style='font-size:18px;'> <b>Updates</b>:
+                    """
+                    for upd in sensors_info[sensor_name].updates:
+                        html_content += f"<br> {upd}"
+                    
+                    html_content +=f"""
+                        </p>
+                        <p><b>Graphs</b></p>
+                        <div>{plot_img_tag_pm25}</div>
+                        <div>{plot_img_tag_rh}</div>
+                        <div>{plot_img_tag_temp}</div>
+                        <div>{plot_img_tag_co2}</div>
+                    </div>
+                    <div class="page-break"></div>
+                    """
+                html_content += "<p class='sensor-type'>Outdoor sensors</p>"
+                for sensor_name, latitude, longitude, sensor_type, status, plot_path in data_outdoor:
+                    if not status:
+                        continue
+                    status_text: str = "Responding (Data Available)" if status else "Not Responding (Empty Data)"
+                    plot_img_tag_pm25: str = f'<img src="{plot_path[0]}" width="950">' if plot_path[0] else "No Data"
+                    plot_img_tag_rh: str = f'<img src="{plot_path[1]}" width="950">' if plot_path[1] else ""
+                    plot_img_tag_temp: str = f'<img src="{plot_path[2]}" width="950">' if plot_path[2] else ""
+                    plot_img_tag_co2: str = f'<img src="{plot_path[3]}" width="950">' if plot_path[3] else ""
+                    html_content += f"""
+                    <div>
+                        <p class='sensors-name'>Sensor <b>{sensor_name}</b></p>
+                        <p class='sensor-location' style='font-size:18px;'><b>{get_nearest_city(float(latitude), float(longitude), country)}, {sensors_info[sensor_name].location} ({latitude}, {longitude})</b></p>
+                        <p class='sensor-location' style='font-size:18px;'> City: {sensors_info[sensor_name].city} </p>
+                        <p class='sensor-location' style='font-size:18px;'> Uptime value: {uptimes.get(sensor_name)}% </p>
+                        <p class='sensor-location' style='font-size:18px;'> <b>Updates</b>:
+                    """
+                    for upd in sensors_info[sensor_name].updates:
+                        html_content += f"<br> {upd}"
+                    
+                    html_content +=f"""
+                        </p>
+                        <p><b>Graphs</b></p>
+                        <div>{plot_img_tag_pm25}</div>
+                        <div>{plot_img_tag_rh}</div>
+                        <div>{plot_img_tag_temp}</div>
+                        <div>{plot_img_tag_co2}</div>
+                    </div>
+                    <div class="page-break"></div>
+                    """
+                html_content += "</body></html>"
 
-            output_pdf_path: str = f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_summary.pdf"
-            pdfkit.from_string(html_content, output_pdf_path)
-            print(f"Summary pdf created successfully for {country}")
-        except Exception as e:
-            html_content: str = """
-            <html>
-            <head>
-                <style>
-                    body { background-color: white; font-family: 'Times New Roman', Times, serif; font-size: 24px; margin-left: 20%; margin-right: 20%; margin-top: 30%; margin-bottom: 30%; text-align: center;}
-                </style>
-            </head>
-            <body>
-            """
-            html_content += f"""
-            <p> Could not retrieve data for the sensors in {country_names[country]}. </p>
-            """
-            html_content += "</body></html>"
-            output_pdf_path: str = f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_summary.pdf"
-            pdfkit.from_string(html_content, output_pdf_path)
-            print(f"Error processing data for {country}: {e}. An empty pdf was created.")
-            continue
+                output_pdf_path: str = f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_summary.pdf"
+                pdfkit.from_string(html_content, output_pdf_path)
+                print(f"Summary pdf created successfully for {country} {level_folder}")
+            except Exception as e:
+                try:
+                    html_content: str = """
+                    <html>
+                    <head>
+                        <style>
+                            body { background-color: white; font-family: 'Times New Roman', Times, serif; font-size: 24px; margin-left: 20%; margin-right: 20%; margin-top: 30%; margin-bottom: 30%; text-align: center;}
+                        </style>
+                    </head>
+                    <body>
+                    """
+                    html_content += f"""
+                    <p> Could not retrieve data for the sensors in {country_names[country]}. </p>
+                    """
+                    html_content += "</body></html>"
+                    output_pdf_path: str = f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_summary.pdf"
+                    pdfkit.from_string(html_content, output_pdf_path)
+                    print(f"Error processing data for {country}: {e}. An empty pdf was created.")
+                    continue
+                except Exception as e:
+                    print(f"Error creating summary for {country} at all: {e}.")
+                    continue

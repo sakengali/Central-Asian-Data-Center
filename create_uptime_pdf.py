@@ -87,17 +87,17 @@ def preprocess(df : pd.DataFrame) -> int:
     uptime = round(count/total_hours*100)
     return uptime
 
-def calculate_uptime(country : str) -> Dict[str, float]:
+def calculate_uptime(country : str, level_folder: str) -> Dict[str, float]:
     uptimes: Dict = {}
     try:
         for sensor_type in ['Indoor Sensors', 'Outdoor Sensors']:
-            for sensor in os.listdir(f"{BASE_DIR}/Central Asian Data/{country}/Level 0/{date_folder_name}/{sensor_type}"):
+            for sensor in os.listdir(f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}"):
                 match = re.match(r'([A-Za-z0-9-]+)-\w+-\d{4}', sensor)
                 if match:
                     sensor_name = match.group(1)
                 else:
                     sensor_name = sensor.split('-')[0]
-                df: pd.DataFrame = pd.read_csv(f"{BASE_DIR}/Central Asian Data/{country}/Level 0/{date_folder_name}/{sensor_type}/{sensor}")
+                df: pd.DataFrame = pd.read_csv(f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}/{sensor}")
                 if df.empty:
                     continue
                 else:
@@ -106,92 +106,93 @@ def calculate_uptime(country : str) -> Dict[str, float]:
         return uptimes
     except Exception as e:
         print(f"Uptime calculations for {country} failed. Error: {e}")
-        return
+        return None
 
 
 def create_uptime_graph() -> None:
     for country in ['KZ', 'KG', 'UZ']:
-        uptimes: Dict = {}
-        print(f"Creating uptime graphs pdf for {country} ...")
-        try:
-            for sensor_type in ['Indoor Sensors', 'Outdoor Sensors']:
-                for sensor in os.listdir(f"{BASE_DIR}/Central Asian Data/{country}/Level 0/{date_folder_name}/{sensor_type}"):
-                    match = re.match(r'([A-Za-z0-9-]+)-\w+-\d{4}', sensor)
-                    if match:
-                        sensor_name = match.group(1)
-                    else:
-                        sensor_name = sensor.split('-')[0]
-                    df: pd.DataFrame = pd.read_csv(f"{BASE_DIR}/Central Asian Data/{country}/Level 0/{date_folder_name}/{sensor_type}/{sensor}")
-                    if df.empty:
-                        continue
-                    else:
-                        uptimes[sensor_name] = preprocess(df)
-
-            imgs : List = []
-
-            for chunk in split_list(sorted(list(uptimes.keys()), key=lambda x: (len(x[0]), x[0])), 15):
-                plt.figure(figsize=(18, 6))
-                for sensor in chunk:
-                    bar = plt.bar(sensor, uptimes[sensor], label=sensor)
-                    
-                    # Add Y value annotation
-                    plt.text(bar[0].get_x() + bar[0].get_width() / 2, bar[0].get_height(), 
-                            f'{uptimes[sensor]:.2f}', ha='center', va='bottom')
-
-                plt.xlabel('Sensor')
-                plt.ylabel('Uptime %')
-                plt.xticks(rotation=45)
-                #plt.legend()
-                plt.tight_layout()
-                # plt.savefig('uptime_barchart1.png', dpi=300)
-                buf = BytesIO()
-                plt.savefig(buf, format='png')
-                plt.close()
-                buf.seek(0)
-                img_base64 = base64.b64encode(buf.read()).decode('utf-8')
-                img: str = f"data:image/png;base64,{img_base64}"
-                imgs.append(img)
-
-            html_content: str = """
-                <head>
-                <style>
-                    body { background-color: white; font-family: 'Times New Roman', Times, serif; }
-                    .page-break { page-break-after: always; }
-                </style>
-                </head>
-                <body>
-            """
-            html_content += f'<div style="font-size: 24px; font-weight: bold; text-align: center; margin-left: 20%; margin-right: 20%;">Uptime of all sensors in {country_names[country]} for the period of {get_period()}</div><br><br>'
-
-            for img in imgs:
-                html_content += f"""
-                            <div><img src="{img}" width="950"></div>
-                """
-            html_content += "</body></html>"
-            
-            output_pdf_path: str = f"{BASE_DIR}/Central Asian Data/{country}/Level 0/{date_folder_name}/{country.lower()}_uptime.pdf"
-            pdfkit.from_string(html_content, output_pdf_path)
-            print(f"Uptime pdf created successfully for {country}")
-        
-        except Exception as e:
+        for level_folder in ['Level 0', 'Level 1', 'Level 2']:
+            print(f"Creating uptime graphs pdf for {country} {level_folder}...")
+            uptimes: Dict = {}
             try:
+                for sensor_type in ['Indoor Sensors', 'Outdoor Sensors']:
+                    for sensor in os.listdir(f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}"):
+                        match = re.match(r'([A-Za-z0-9-]+)-\w+-\d{4}', sensor)
+                        if match:
+                            sensor_name = match.group(1)
+                        else:
+                            sensor_name = sensor.split('-')[0]
+                        df: pd.DataFrame = pd.read_csv(f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}/{sensor}")
+                        if df.empty:
+                            continue
+                        else:
+                            uptimes[sensor_name] = preprocess(df)
+
+                imgs : List = []
+
+                for chunk in split_list(sorted(list(uptimes.keys()), key=lambda x: (len(x[0]), x[0])), 15):
+                    plt.figure(figsize=(18, 6))
+                    for sensor in chunk:
+                        bar = plt.bar(sensor, uptimes[sensor], label=sensor)
+                        
+                        # Add Y value annotation
+                        plt.text(bar[0].get_x() + bar[0].get_width() / 2, bar[0].get_height(), 
+                                f'{uptimes[sensor]:.2f}', ha='center', va='bottom')
+
+                    plt.xlabel('Sensor')
+                    plt.ylabel('Uptime %')
+                    plt.xticks(rotation=45)
+                    #plt.legend()
+                    plt.tight_layout()
+                    # plt.savefig('uptime_barchart1.png', dpi=300)
+                    buf = BytesIO()
+                    plt.savefig(buf, format='png')
+                    plt.close()
+                    buf.seek(0)
+                    img_base64 = base64.b64encode(buf.read()).decode('utf-8')
+                    img: str = f"data:image/png;base64,{img_base64}"
+                    imgs.append(img)
+
                 html_content: str = """
-                <html>
-                <head>
+                    <head>
                     <style>
-                        body { background-color: white; font-family: 'Times New Roman', Times, serif; font-size: 24px; margin-left: 20%; margin-right: 20%; margin-top: 30%; margin-bottom: 30%; text-align: center;}
+                        body { background-color: white; font-family: 'Times New Roman', Times, serif; }
+                        .page-break { page-break-after: always; }
                     </style>
-                </head>
-                <body>
+                    </head>
+                    <body>
                 """
-                html_content += f"""
-                <p> Could not retrieve data for the sensors in {country_names[country]}. </p>
-                """
+                html_content += f'<div style="font-size: 24px; font-weight: bold; text-align: center; margin-left: 20%; margin-right: 20%;">Uptime of all sensors in {country_names[country]} for the period of {get_period()}</div><br><br>'
+
+                for img in imgs:
+                    html_content += f"""
+                                <div><img src="{img}" width="950"></div>
+                    """
                 html_content += "</body></html>"
-                output_pdf_path: str = f"{BASE_DIR}/Central Asian Data/{country}/Level 0/{date_folder_name}/{country.lower()}_uptime.pdf"
+                
+                output_pdf_path: str = f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_uptime.pdf"
                 pdfkit.from_string(html_content, output_pdf_path)
-                print(f"Error processing data for {country}: {e}. An empty pdf was created.")
-            except:
-                pass
-            print(f"Error processing data for {country}: {e}")
-            continue
+                print(f"Uptime pdf created successfully for {country} {level_folder}")
+            
+            except Exception as e:
+                try:
+                    html_content: str = """
+                    <html>
+                    <head>
+                        <style>
+                            body { background-color: white; font-family: 'Times New Roman', Times, serif; font-size: 24px; margin-left: 20%; margin-right: 20%; margin-top: 30%; margin-bottom: 30%; text-align: center;}
+                        </style>
+                    </head>
+                    <body>
+                    """
+                    html_content += f"""
+                    <p> Could not retrieve data for the sensors in {country_names[country]}. </p>
+                    """
+                    html_content += "</body></html>"
+                    output_pdf_path: str = f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_uptime.pdf"
+                    pdfkit.from_string(html_content, output_pdf_path)
+                    print(f"Error processing data for {country} {level_folder}: {e}. An empty pdf was created.")
+                except:
+                    pass
+                print(f"Error processing data for {country} {level_folder}: {e}")
+                continue
