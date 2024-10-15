@@ -110,8 +110,8 @@ def calculate_uptime(country : str, level_folder: str) -> Dict[str, float]:
 
 
 def create_uptime_graph() -> None:
-    daily_uptime_html : List = []
     for country in ['KZ', 'KG', 'UZ']:
+        daily_uptime_html : List = []
         for level_folder in ['Level 0']:
             print(f"Creating uptime graphs pdf for {country} {level_folder}...")
             uptimes: Dict = {}
