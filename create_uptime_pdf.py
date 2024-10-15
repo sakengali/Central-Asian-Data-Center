@@ -111,11 +111,15 @@ def calculate_uptime(country : str, level_folder: str) -> Dict[str, float]:
 
 def create_uptime_graph() -> None:
     for country in ['KZ', 'KG', 'UZ']:
-        for level_folder in ['Level 0', 'Level 1', 'Level 2']:
+        for level_folder in ['Level 0']:
             print(f"Creating uptime graphs pdf for {country} {level_folder}...")
             uptimes: Dict = {}
             try:
                 for sensor_type in ['Indoor Sensors', 'Outdoor Sensors']:
+
+                    daily_uptime_df = create_daily_uptime_table(f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}")
+                    daily_uptime_html = daily_uptime_df.to_html()
+                    
                     for sensor in os.listdir(f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}"):
                         match = re.match(r'([A-Za-z0-9-]+)-\w+-\d{4}', sensor)
                         if match:
@@ -166,14 +170,16 @@ def create_uptime_graph() -> None:
 
                 for img in imgs:
                     html_content += f"""
-                                <div><img src="{img}" width="950"></div>
+                                <div><img src="{img}" width="100%"></div>
                     """
+                html_content += f'<div class="page-break"></div><div style="font-size: 18px; font-weight: bold; text-align: center; margin-top: 20px;">Daily Uptime Table</div>'
+                html_content += daily_uptime_html
                 html_content += "</body></html>"
                 
                 output_pdf_path: str = f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_uptime.pdf"
                 pdfkit.from_string(html_content, output_pdf_path)
                 print(f"Uptime pdf created successfully for {country} {level_folder}")
-            
+                
             except Exception as e:
                 try:
                     html_content: str = """
@@ -196,3 +202,114 @@ def create_uptime_graph() -> None:
                     pass
                 print(f"Error processing data for {country} {level_folder}: {e}")
                 continue
+
+
+def create_daily_uptime_table(path: str) -> pd.DataFrame:
+    all_dfs = []
+    data_folder_path = path
+    
+    for file_name in os.listdir(data_folder_path):
+        if file_name.endswith('.csv'):
+            file_path = os.path.join(data_folder_path, file_name)
+            df = pd.read_csv(file_path)
+            
+            daily_uptime_df = preprocess_daily(df)
+            match = re.match(r'([A-Za-z0-9-]+)-\w+-\d{4}', file_name)
+            if match:
+                daily_uptime_df['Sensor'] = match.group(1)
+            else:
+                daily_uptime_df['Sensor'] = file_name.split('-')[0]
+            
+            all_dfs.append(daily_uptime_df)
+    
+    if all_dfs:
+        result_df = pd.concat(all_dfs)
+        pivot_df = result_df.pivot(index='Date', columns='Sensor', values='Uptime')
+        sorted_columns = sorted(pivot_df.columns, key=lambda x: (len(x), x))
+        pivot_df = pivot_df[sorted_columns]
+        pivot_df.fillna(0, inplace=True)
+        pivot_df.index.name = None
+        return pivot_df
+    else:
+        return pd.DataFrame()
+
+import pandas as pd
+
+def preprocess_daily(df: pd.DataFrame) -> pd.DataFrame:
+    if df.empty:
+        return pd.DataFrame(columns=['Date', 'Uptime'])
+
+    df = df.drop([0], axis=0)
+    df["Timestamp"] = pd.to_datetime(df['Timestamp'], format='%Y-%m-%dT%H:%M:%SZ')
+    df = df.set_index("Timestamp")
+
+    daily_uptime = []
+
+    for day, day_df in df.groupby(df.index.date):
+        day_df = day_df.reset_index()
+        first_hour = day_df.loc[0, "Timestamp"].hour
+
+        # Drop rows before the first hour change
+        i = 1
+        while i < len(day_df):
+            if day_df.loc[i, "Timestamp"].hour != first_hour:
+                day_df = day_df.drop(range(0, i), axis=0).reset_index(drop=True)
+                break
+            i += 1
+
+        if len(day_df) < 2:
+            daily_uptime.append([day, 0])  # Append 0% uptime for this day
+            continue
+
+        start_time = day_df.loc[0, 'Timestamp']
+        second_time = day_df.loc[1, 'Timestamp']
+        interval = (second_time - start_time).total_seconds()
+        end_time = day_df.loc[day_df.index[-1], 'Timestamp']
+        total_hours = (end_time - start_time).total_seconds() // 3600
+
+        exclude_indices = []
+        for ind in day_df.index:
+            if not preprocess_row(day_df.loc[ind]):
+                exclude_indices.append(ind)
+
+        ind = 0
+        cur_ind = -1
+        cur_hour = -1
+        hour_list = []
+
+        count = 0
+
+        while True:
+            if cur_ind == -1:
+                cur_ind = ind
+                cur_hour = day_df.loc[ind].Timestamp.hour
+                hour_list = [ind]
+                ind += 1
+            elif day_df.loc[ind].Timestamp.hour != cur_hour or ind == day_df.index[-1]:
+                if ind == day_df.index[-1]:
+                    hour_list.append(ind)
+                hour_list = [x for x in hour_list if x not in exclude_indices]
+
+                if len(hour_list) >= 3600 / interval * 0.75:
+                    count += 1
+
+                cur_ind = -1
+                hour_list = []
+            else:
+                hour_list.append(ind)
+                ind += 1
+
+            if ind == day_df.index[-1]:
+                break
+
+        if total_hours <= 0:
+            uptime = 0
+        else:
+            uptime = round(count / total_hours * 100)
+        daily_uptime.append([day, uptime])
+
+    daily_uptime_df = pd.DataFrame(daily_uptime, columns=['Date', 'Uptime'])
+
+    return daily_uptime_df
+
+create_uptime_graph()

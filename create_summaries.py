@@ -192,7 +192,7 @@ def get_data(country: str, level_folder: str) -> Tuple[
 def create_summary_pdf() -> None:
 
     for country in ['KZ', 'KG', 'UZ']:
-        for level_folder in ['Level 0', 'Level 1', 'Level 2']:
+        for level_folder in ['Level 0']:
             print(f"Creating summary pdf for {country} {level_folder} ...")
             try:
                 #getting uptime data of sensors

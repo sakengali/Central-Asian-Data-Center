@@ -115,7 +115,7 @@ def create_info_file():
     """ creates the {country}_info.txt file """
 
     for country in ['KZ', 'KG', 'UZ']:
-        for level_folder in ['Level 0', 'Level 1', 'Level 2']:
+        for level_folder in ['Level 0']:
             try:
                 with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_info.txt", 'w') as f:
                     f.write(f"The data of {country} sensors was downloaded on {datetime.now()}\n\n")
