@@ -110,6 +110,7 @@ def calculate_uptime(country : str, level_folder: str) -> Dict[str, float]:
 
 
 def create_uptime_graph() -> None:
+    daily_uptime_html : List = []
     for country in ['KZ', 'KG', 'UZ']:
         for level_folder in ['Level 0']:
             print(f"Creating uptime graphs pdf for {country} {level_folder}...")
@@ -118,7 +119,7 @@ def create_uptime_graph() -> None:
                 for sensor_type in ['Indoor Sensors', 'Outdoor Sensors']:
 
                     daily_uptime_df = create_daily_uptime_table(f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}")
-                    daily_uptime_html = daily_uptime_df.to_html()
+                    daily_uptime_html.append(daily_uptime_df.to_html())
                     
                     for sensor in os.listdir(f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}"):
                         match = re.match(r'([A-Za-z0-9-]+)-\w+-\d{4}', sensor)
@@ -173,7 +174,8 @@ def create_uptime_graph() -> None:
                                 <div><img src="{img}" width="100%"></div>
                     """
                 html_content += f'<div class="page-break"></div><div style="font-size: 18px; font-weight: bold; text-align: center; margin-top: 20px;">Daily Uptime Table</div>'
-                html_content += daily_uptime_html
+                for _ in daily_uptime_html:
+                    html_content += _ + '<div class="page-break"></div>'
                 html_content += "</body></html>"
                 
                 output_pdf_path: str = f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_uptime.pdf"
