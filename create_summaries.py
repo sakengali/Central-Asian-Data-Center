@@ -13,7 +13,7 @@ from io import BytesIO
 from typing import List, Tuple, Dict
 from datetime import datetime, timedelta
 from helpers import get_date_folder_name, get_sensors_info
-from helpers import country_names, cwd, get_level_0_folder
+from helpers import country_names, cwd, get_level_0_folder, get_level_1_folder
 from create_uptime_pdf import calculate_uptime
 
 #getting the correct path to this directory
@@ -131,7 +131,8 @@ def get_data(country: str) -> Tuple[
     summary_outdoor_data: List[pd.DataFrame] = []
     status: bool
 
-    level_folder = get_level_0_folder(country)
+    #use the cleaned data and save the pdf to level 1 folder
+    level_folder = get_level_1_folder(country)
 
     for sensor_type in ['Indoor Sensors', 'Outdoor Sensors']:
         for sensor in os.listdir(f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}"):
@@ -194,7 +195,7 @@ def create_summary_pdf() -> None:
 
     for country in ['KZ', 'KG', 'UZ']:
 
-        level_folder = get_level_0_folder(country)
+        level_folder = get_level_1_folder(country)
 
         print(f"Creating summary pdf for {country} ...")
         try:

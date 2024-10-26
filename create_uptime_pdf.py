@@ -36,16 +36,26 @@ def preprocess_row(obj):
     return True
 
 def preprocess(df : pd.DataFrame) -> int:
+    """ 
+        takes a sensor data dataframe and returns the uptime percentage of the sensor
+    """
+    
     df = df.drop([0], axis=0)
     df["Timestamp"] = pd.to_datetime(df['Timestamp'], format='%Y-%m-%dT%H:%M:%SZ')
     first_hour = df.loc[1,"Timestamp"].hour
 
+    # Drop rows until the first hour of the day
     i = 2
     while True:
         if df.loc[i,"Timestamp"].hour!=first_hour:
             df = df.drop(range(1,i), axis=0)
             break
         i+=1
+
+    #if sensor has data only for one hour, uptime is 0
+    if len(df)<2:
+        return 0
+    
     start_time = df.loc[df.index[0],['Timestamp']].item()
     second_time = df.loc[df.index[1],['Timestamp']].item()
     interval = (second_time-start_time).total_seconds()
@@ -61,7 +71,7 @@ def preprocess(df : pd.DataFrame) -> int:
     cur_ind = -1
     cur_hour = -1
     hour_list = []
-
+    
     count = 0
     while True:
         if cur_ind==-1:
@@ -85,6 +95,7 @@ def preprocess(df : pd.DataFrame) -> int:
         if ind==df.index[-1]:
             break
     uptime = round(count/total_hours*100)
+    
     return uptime
 
 def calculate_uptime(country : str) -> Dict[str, float]:
@@ -199,6 +210,5 @@ def create_uptime_graph() -> None:
                 pdfkit.from_string(html_content, output_pdf_path)
                 print(f"Error processing data for {country}: {e}. An empty pdf was created.")
             except:
-                pass
-            print(f"Error processing data for {country}: {e}")
+                print(f"Error processing data for {country}: {e}")
             continue

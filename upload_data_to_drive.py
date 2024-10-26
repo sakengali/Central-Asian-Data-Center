@@ -10,7 +10,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 
-from helpers import cwd, date_folder_name, get_level_0_folder
+from helpers import cwd, date_folder_name, get_level_0_folder, get_level_1_folder
 
 """
 Uploads newly downloaded data of KZ, KG and UZ to corresponding folders in Google Drive.
@@ -99,7 +99,7 @@ def upload_file_to_folder(creds, file_name : str, parent_folder_ids : List[str])
 
     return file.get('id')
 
-def create_folders(creds):
+def create_folders(creds, level: str = '0'):
     """
     create folders in the following structure:
 
@@ -113,13 +113,18 @@ def create_folders(creds):
     """
     print("creating folders ... ")
 
-    kz_level0_folder_id = "1tK95cgkDNwCKVN_6XVlypwI0J61Oxogh"
-    kg_level0_folder_id = "1rH60ZFRlwkC_1gR1a6iTg43fZzWBylC_"
-    uz_level0_folder_id = "1emKDUabDiUCEoqTRG0J8yrUnSsA3UlzB"
+    if level == "0":
+        kz_level_folder_id = "1tK95cgkDNwCKVN_6XVlypwI0J61Oxogh"
+        kg_level_folder_id = "1rH60ZFRlwkC_1gR1a6iTg43fZzWBylC_"
+        uz_level_folder_id = "1emKDUabDiUCEoqTRG0J8yrUnSsA3UlzB"
+    if level == "1":
+        kz_level_folder_id = "1x-tbN3OhQmNN_34XVmoYMFZFDnuX1poR"
+        kg_level_folder_id = "1AhAv3lkCT1HKwVVYlWCW31RrBLzGL4zq"
+        uz_level_folder_id = "1P_M0ZYAnZjbq9ycYW4TGJw7sy45HQnzR"
 
-    kz_date_folder_id = create_folder_in_folder(creds, date_folder_name, [kz_level0_folder_id])
-    kg_date_folder_id = create_folder_in_folder(creds, date_folder_name, [kg_level0_folder_id])
-    uz_date_folder_id = create_folder_in_folder(creds, date_folder_name, [uz_level0_folder_id])
+    kz_date_folder_id = create_folder_in_folder(creds, date_folder_name, [kz_level_folder_id])
+    kg_date_folder_id = create_folder_in_folder(creds, date_folder_name, [kg_level_folder_id])
+    uz_date_folder_id = create_folder_in_folder(creds, date_folder_name, [uz_level_folder_id])
 
     data_folder_ids = {
         'KZ' : kz_date_folder_id,
@@ -163,18 +168,18 @@ def create_folders(creds):
 
     return data_folder_ids, folder_ids
 
-def upload_data_for(creds, country : str, indoor_folder_id : str, outdoor_folder_id : str):
+def upload_data_for(creds, country : str, indoor_folder_id : str, outdoor_folder_id : str, level: str):
     """
     Upload data of sensors in .csv files
     """
 
-    level_folder = get_level_0_folder(country)
+    level_folder = get_level_0_folder(country) if level == '0' else get_level_1_folder(country)
     indoor_folder_name = 'Indoor Sensors'
     outdoor_folder_name = 'Outdoor Sensors'
 
     # uploading data for indoor sensors
     os.chdir(f"{cwd}/Central Asian Data/{country.upper()}/{level_folder}/{date_folder_name}/{indoor_folder_name}")
-    print('Uploading indoor data')
+    print(f'Uploading indoor data (level {level})')
     with tqdm(os.listdir()) as t:
         for file_name in t:
             t.set_description(f"Uploading {file_name}")
@@ -182,7 +187,7 @@ def upload_data_for(creds, country : str, indoor_folder_id : str, outdoor_folder
 
     # uplodaing data for outdoor sensors
     os.chdir(f"{cwd}/Central Asian Data/{country.upper()}/{level_folder}/{date_folder_name}/{outdoor_folder_name}")
-    print('Uploading outdoor data')
+    print(f'Uploading outdoor data (level {level})')
     with tqdm(os.listdir()) as t:
         for file_name in t:
             t.set_description(f"Uploading {file_name}")
@@ -207,7 +212,7 @@ def upload_summary_file(creds, country : str, date_folder_id : str):
     uploads summary_{country}.pdf file to the date folder
     """
 
-    level_folder = get_level_0_folder(country)
+    level_folder = get_level_1_folder(country)
 
     os.chdir(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}")
     upload_file_to_folder(creds, f"{country.lower()}_summary.pdf", parent_folder_ids=[date_folder_id])
@@ -230,27 +235,29 @@ def main_upload():
     creds = get_credentials()
 
     # create date and indoor/outdoor folders
-    date_folder_ids, folder_ids = create_folders(creds)
-    
+    level_0_date_folder_ids, level_0_folder_ids = create_folders(creds, level='0')
+    level_1_date_folder_ids, level_1_folder_ids = create_folders(creds, level='1')
+
     # upload
     for country in ['KZ', 'KG', 'UZ']:
 
         try:
             # upload data
             print(f'\nUploading data for {country}')
-            upload_data_for(creds, country, *folder_ids[country])
+            upload_data_for(creds, country, *level_0_folder_ids[country], level='0')
+            upload_data_for(creds, country, *level_1_folder_ids[country], level='1')
 
             # upload info.txt file
             print(f'Uploading {country.lower()}_info.txt file')
-            upload_info_file(creds, country, date_folder_ids[country])
+            upload_info_file(creds, country, level_1_date_folder_ids[country])
 
             # upload uptime.pdf
             print(f'Uploading {country.lower()}_uptime.pdf file')
-            upload_uptime_file(creds, country, date_folder_ids[country])
+            upload_uptime_file(creds, country, level_1_date_folder_ids[country])
 
             # upload summary.pdf
             print(f'Uploading {country.lower()}_summary.pdf file')
-            upload_summary_file(creds, country, date_folder_ids[country])
+            upload_summary_file(creds, country, level_1_date_folder_ids[country])
             
         except FileNotFoundError as e:
             print(f"Couldn't upload data for {country}. Error: {e}")

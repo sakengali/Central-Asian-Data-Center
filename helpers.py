@@ -19,6 +19,8 @@ country_names = {
 
 get_level_0_folder = lambda country : "Level 0h" if country == "KZ" else "Level 0"
 
+get_level_1_folder = lambda country : "Level 2" if country == "KZ" else "Level 1"
+
 def get_date_folder_name() -> str:
     """ returns date folder name"""
 

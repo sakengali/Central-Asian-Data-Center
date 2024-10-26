@@ -5,6 +5,7 @@ from helpers import create_info_file
 from create_summaries import create_summary_pdf
 from create_uptime_pdf import create_uptime_graph
 import pandas as pd
+from clean import clean_main
 
 # today's day and month
 month = pd.Timestamp.today().month
@@ -31,6 +32,7 @@ def main():
         if today == 15 or today == 28:
             try:
                 download_data()
+                clean_main()
                 create_info_file()
                 create_uptime_graph()
                 create_summary_pdf()
@@ -42,6 +44,7 @@ def main():
         if today == 15 or today == 29:
             try:
                 download_data()
+                clean_main()
                 create_info_file()
                 create_uptime_graph()
                 create_summary_pdf()
