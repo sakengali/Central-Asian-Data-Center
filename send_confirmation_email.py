@@ -13,7 +13,7 @@ from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email import encoders
 
-from helpers import get_sensors_info, date_folder_name, cwd
+from helpers import get_sensors_info, date_folder_name, cwd, get_level_0_folder
 
 import socket
 timeout_in_sec = 60*5 # 3 minutes timeout limit
@@ -157,8 +157,6 @@ def get_list_off_sensors(country):
 
     return make_readable_list(off_sensors)
 
-
-
 def send_email_main(is_successful : bool = True, error : str = ''):
     """Send the email to the recipients"""
 
@@ -169,10 +167,11 @@ def send_email_main(is_successful : bool = True, error : str = ''):
 
     if is_successful:
         
-        level_folder = "Level 0"
         file_path_list = []
 
         for cnt in ['KZ', 'KG', 'UZ']:
+            level_folder = get_level_0_folder(cnt)
+
             file_path_list.append(f"{cwd}/Central Asian Data/{cnt}/{level_folder}/{date_folder_name}/{cnt.lower()}_info.txt")
             #file_path_list.append(f"{cwd}/Central Asian Data/{cnt}/{level_folder}/{date_folder_name}/{cnt.lower()}_summary.pdf")
 

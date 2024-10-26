@@ -10,7 +10,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 
-from helpers import cwd, date_folder_name
+from helpers import cwd, date_folder_name, get_level_0_folder
 
 """
 Uploads newly downloaded data of KZ, KG and UZ to corresponding folders in Google Drive.
@@ -168,7 +168,7 @@ def upload_data_for(creds, country : str, indoor_folder_id : str, outdoor_folder
     Upload data of sensors in .csv files
     """
 
-    level_folder = "Level 0"
+    level_folder = get_level_0_folder(country)
     indoor_folder_name = 'Indoor Sensors'
     outdoor_folder_name = 'Outdoor Sensors'
 
@@ -195,7 +195,7 @@ def upload_info_file(creds, country : str, date_folder_id : str):
     uploads info.txt file to the date folder
     """
 
-    level_folder = "Level 0"
+    level_folder = get_level_0_folder(country)
 
     os.chdir(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}")
     upload_file_to_folder(creds, f"{country.lower()}_info.txt", parent_folder_ids=[date_folder_id])
@@ -207,7 +207,7 @@ def upload_summary_file(creds, country : str, date_folder_id : str):
     uploads summary_{country}.pdf file to the date folder
     """
 
-    level_folder = "Level 0"
+    level_folder = get_level_0_folder(country)
 
     os.chdir(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}")
     upload_file_to_folder(creds, f"{country.lower()}_summary.pdf", parent_folder_ids=[date_folder_id])
@@ -219,7 +219,7 @@ def upload_uptime_file(creds, country : str, date_folder_id : str):
     uploads {country}_uptime.pdf file to the date folder
     """
 
-    level_folder = "Level 0"
+    level_folder = get_level_0_folder(country)
 
     os.chdir(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}")
     upload_file_to_folder(creds, f"{country.lower()}_uptime.pdf", parent_folder_ids=[date_folder_id])

@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from typing import List, Tuple, Dict
 from datetime import datetime, timedelta
 from helpers import get_date_folder_name
-from helpers import country_names, cwd
+from helpers import country_names, cwd, get_level_0_folder
 
 BASE_DIR: str = cwd
 
@@ -88,16 +88,19 @@ def preprocess(df : pd.DataFrame) -> int:
     return uptime
 
 def calculate_uptime(country : str) -> Dict[str, float]:
+
+    level_folder = get_level_0_folder(country)
+
     uptimes: Dict = {}
     try:
         for sensor_type in ['Indoor Sensors', 'Outdoor Sensors']:
-            for sensor in os.listdir(f"{BASE_DIR}/Central Asian Data/{country}/Level 0/{date_folder_name}/{sensor_type}"):
+            for sensor in os.listdir(f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}"):
                 match = re.match(r'([A-Za-z0-9-]+)-\w+-\d{4}', sensor)
                 if match:
                     sensor_name = match.group(1)
                 else:
                     sensor_name = sensor.split('-')[0]
-                df: pd.DataFrame = pd.read_csv(f"{BASE_DIR}/Central Asian Data/{country}/Level 0/{date_folder_name}/{sensor_type}/{sensor}")
+                df: pd.DataFrame = pd.read_csv(f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}/{sensor}")
                 if df.empty:
                     continue
                 else:
@@ -110,18 +113,22 @@ def calculate_uptime(country : str) -> Dict[str, float]:
 
 
 def create_uptime_graph() -> None:
+    
     for country in ['KZ', 'KG', 'UZ']:
+
+        level_folder = get_level_0_folder(country)
+
         uptimes: Dict = {}
         print(f"Creating uptime graphs pdf for {country} ...")
         try:
             for sensor_type in ['Indoor Sensors', 'Outdoor Sensors']:
-                for sensor in os.listdir(f"{BASE_DIR}/Central Asian Data/{country}/Level 0/{date_folder_name}/{sensor_type}"):
+                for sensor in os.listdir(f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}"):
                     match = re.match(r'([A-Za-z0-9-]+)-\w+-\d{4}', sensor)
                     if match:
                         sensor_name = match.group(1)
                     else:
                         sensor_name = sensor.split('-')[0]
-                    df: pd.DataFrame = pd.read_csv(f"{BASE_DIR}/Central Asian Data/{country}/Level 0/{date_folder_name}/{sensor_type}/{sensor}")
+                    df: pd.DataFrame = pd.read_csv(f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}/{sensor}")
                     if df.empty:
                         continue
                     else:
@@ -169,7 +176,7 @@ def create_uptime_graph() -> None:
                 """
             html_content += "</body></html>"
             
-            output_pdf_path: str = f"{BASE_DIR}/Central Asian Data/{country}/Level 0/{date_folder_name}/{country.lower()}_uptime.pdf"
+            output_pdf_path: str = f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_uptime.pdf"
             pdfkit.from_string(html_content, output_pdf_path)
             print(f"Uptime pdf created successfully for {country}")
         
@@ -188,7 +195,7 @@ def create_uptime_graph() -> None:
                 <p> Could not retrieve data for the sensors in {country_names[country]}. </p>
                 """
                 html_content += "</body></html>"
-                output_pdf_path: str = f"{BASE_DIR}/Central Asian Data/{country}/Level 0/{date_folder_name}/{country.lower()}_uptime.pdf"
+                output_pdf_path: str = f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_uptime.pdf"
                 pdfkit.from_string(html_content, output_pdf_path)
                 print(f"Error processing data for {country}: {e}. An empty pdf was created.")
             except:

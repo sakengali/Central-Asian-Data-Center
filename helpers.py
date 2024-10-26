@@ -7,7 +7,6 @@ import gspread
 import json
 
 cwd : str = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center" if "dhawal" in os.getcwd() else os.getcwd()
-level_folder : str = "Level 0"
 
 #service account to obtain information from google spreadsheets
 gc = gspread.service_account(filename=f'{cwd}/cosmic-talent-416001-3c711f8ccf2e.json')
@@ -18,13 +17,14 @@ country_names = {
     'UZ': 'Uzbekistan'
 }
 
+get_level_0_folder = lambda country : "Level 0h" if country == "KZ" else "Level 0"
 
 def get_date_folder_name() -> str:
     """ returns date folder name"""
 
     this_month = pd.Timestamp.today().strftime("%b-%Y")
     month_part = '1' if pd.Timestamp.today().day <= 15 else '2'
-    return f"{this_month}-{month_part}" if "dhawal" in os.getcwd() else "Sep-2024-2"
+    return f"{this_month}-{month_part}" # if "dhawal" in os.getcwd() else "Oct-2024-2"
 
 date_folder_name : str = get_date_folder_name()
 
@@ -38,10 +38,13 @@ class Sensor(NamedTuple):
     did_change_location : str
     calibration_factor : float
     updates : List
-    
+
+    def get_level_0_folder(self):
+        return "Level 0h" if self.country == "KZ" else "Level 0"
+
     def is_responding(self):
         sensor_file_name = f"{self.name}-{date_folder_name[:8]}.csv"
-        df = pd.read_csv(f"{cwd}/Central Asian Data/{self.country}/{level_folder}/{date_folder_name}/{self.sensor_type}/{sensor_file_name}")
+        df = pd.read_csv(f"{cwd}/Central Asian Data/{self.country}/{self.get_level_0_folder()}/{date_folder_name}/{self.sensor_type}/{sensor_file_name}")
 
         return not df.empty
 
@@ -107,16 +110,21 @@ def sensor_line_v0(sensor_name, status) -> str:
     elif len(sensor_name) < 16:
         return f"{sensor_name}\t" + "\t"*(1) + f"{status}"
     else:
-        return f"{sensor_name}\t" + f"{status}"    
+        return f"{sensor_name}\t" + f"{status}"
 
 
 def create_info_file():
 
-    """ creates the {country}_info.txt file """
+    """ 
+        creates the {country}_info.txt file 
+        level 0 info is used here, because info file is needed only to obtain data about sensor status, not the data itself
+    """
 
-    try:
-        for country in ['KZ', 'KG', 'UZ']:
+    for country in ['KZ', 'KG', 'UZ']:
 
+        level_folder = get_level_0_folder(country)
+
+        try:
             with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_info.txt", 'w') as f:
                 f.write(f"The data of {country} sensors was downloaded on {datetime.now()}\n\n")
                 f.write(f"Date Folder Name: {date_folder_name}\n\n")
@@ -162,10 +170,7 @@ def create_info_file():
                             with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_info.txt", 'a') as f:
                                 f.write(sensor_line_v0(sensor_name, status) + "\n")
 
-    except FileNotFoundError as e:
-        print(f"Couldn't create log file for {country}. Error: {e}")
+        except FileNotFoundError as e:
+            print(f"Couldn't create log file for {country} {level_folder}. Error: {e}")
 
     return
-
-#TODO:
-# request kg_deployed_sensors.csv and kz_deployed_sensors.csv files, and remove reduntant part of the code for old info_txt file.

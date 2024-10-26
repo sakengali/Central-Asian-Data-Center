@@ -13,7 +13,7 @@ from io import BytesIO
 from typing import List, Tuple, Dict
 from datetime import datetime, timedelta
 from helpers import get_date_folder_name, get_sensors_info
-from helpers import country_names, cwd
+from helpers import country_names, cwd, get_level_0_folder
 from create_uptime_pdf import calculate_uptime
 
 #getting the correct path to this directory
@@ -21,7 +21,6 @@ BASE_DIR: str = cwd
 
 gc = gspread.service_account(filename='./cosmic-talent-416001-3c711f8ccf2e.json')
 
-level_folder: str = "Level 0"
 date_folder_name: str = get_date_folder_name()
 
 
@@ -132,6 +131,8 @@ def get_data(country: str) -> Tuple[
     summary_outdoor_data: List[pd.DataFrame] = []
     status: bool
 
+    level_folder = get_level_0_folder(country)
+
     for sensor_type in ['Indoor Sensors', 'Outdoor Sensors']:
         for sensor in os.listdir(f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}"):
             match = re.match(r'([A-Za-z0-9-]+)-\w+-\d{4}', sensor)
@@ -192,6 +193,9 @@ def get_data(country: str) -> Tuple[
 def create_summary_pdf() -> None:
 
     for country in ['KZ', 'KG', 'UZ']:
+
+        level_folder = get_level_0_folder(country)
+
         print(f"Creating summary pdf for {country} ...")
         try:
             #getting uptime data of sensors
@@ -297,7 +301,7 @@ def create_summary_pdf() -> None:
                 """
             html_content += "</body></html>"
 
-            output_pdf_path: str = f"{BASE_DIR}/Central Asian Data/{country}/Level 0/{date_folder_name}/{country.lower()}_summary.pdf"
+            output_pdf_path: str = f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_summary.pdf"
             pdfkit.from_string(html_content, output_pdf_path)
             print(f"Summary pdf created successfully for {country}")
         except Exception as e:
@@ -314,7 +318,7 @@ def create_summary_pdf() -> None:
             <p> Could not retrieve data for the sensors in {country_names[country]}. </p>
             """
             html_content += "</body></html>"
-            output_pdf_path: str = f"{BASE_DIR}/Central Asian Data/{country}/Level 0/{date_folder_name}/{country.lower()}_summary.pdf"
+            output_pdf_path: str = f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_summary.pdf"
             pdfkit.from_string(html_content, output_pdf_path)
             print(f"Error processing data for {country}: {e}. An empty pdf was created.")
             continue

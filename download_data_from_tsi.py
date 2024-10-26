@@ -6,13 +6,14 @@ import sys
 from typing import Dict
 import json
 from tqdm import tqdm
+from helpers import get_level_0_folder
 
 # TODO: 
 # set age to 16
 # set client_id and client_secret for kg and uz; preferebly using environmmental variables
 
 """
-    Script to download the data of Air Quality sensors for the last 16 days, using the TSI API.
+    Script to download the data of Air Quality sensors for the last 30 days, using the TSI API.
 
     Usage : python3 download_data_from_tsi.py {country_code}
     country_code can be only 'kz', 'kg', and 'uz'       
@@ -24,7 +25,7 @@ cwd = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center"
 
 def get_access_token(country : str, config : Dict[str, str]) -> str:
 
-    """ Input: country code, config dictionary with client ids and secrets of countries\
+    """ Input: country code, config dictionary with client ids and secrets of countries
         Returns : access token for the country's TSI account """
 
     client_id = config[f'{country.lower()}_client_id']
@@ -63,8 +64,6 @@ def get_device_list(is_indoor: bool = True, headers : Dict[str, str] = {}):
     device_list = {device['metadata']['friendlyName'] : device['device_id'] for device in devices}
 
     return device_list
-
-
 
 
 def get_sensor_data(device_id : str, device_name : str, is_indoor=True, headers : Dict[str, str] = {}):
@@ -161,17 +160,17 @@ def create_folders(cwd, country) -> None:
     # getting the date information
     this_month, month_part = get_date()
 
+    level_folder = get_level_0_folder(country)
+
     #create the main folder for data storage
-    if not os.path.isdir(f'{cwd}/Central Asian Data/{country}/Level 0/{this_month}-{month_part}'):
+    if not os.path.isdir(f'{cwd}/Central Asian Data/{country}/{level_folder}/{this_month}-{month_part}'):
         print(f"Creating the necessary folders for data storage")
 
-        os.makedirs(f'{cwd}/Central Asian Data/{country}/Level 0/{this_month}-{month_part}/Indoor Sensors')
-        os.makedirs(f'{cwd}/Central Asian Data/{country}/Level 0/{this_month}-{month_part}/Outdoor Sensors')
+        os.makedirs(f'{cwd}/Central Asian Data/{country}/{level_folder}/{this_month}-{month_part}/Indoor Sensors')
+        os.makedirs(f'{cwd}/Central Asian Data/{country}/{level_folder}/{this_month}-{month_part}/Outdoor Sensors')
 
     else:
         print("Folders for data storage were found.")
-
-
 
 
 
@@ -198,7 +197,7 @@ def main_download(country : str = None):
         }
 
     #level information
-    level_folder = "Level 0"
+    level_folder = get_level_0_folder(country)
 
     create_folders(cwd, country)
 

@@ -1,6 +1,5 @@
 config.json
-debugger_main_script.py
-test_download_data_from_tsi.py
+test/
 Central Asian Data/
 archive/
 credentials/
