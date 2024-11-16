@@ -206,7 +206,7 @@ def create_daily_uptime_table(path: str) -> pd.DataFrame:
     all_dfs = []
     data_folder_path = path
     
-    for file_name in os.listdir(data_folder_path):
+    for file_name in sorted(os.listdir(data_folder_path)):
         if file_name.endswith('.csv'):
             file_path = os.path.join(data_folder_path, file_name)
             df = pd.read_csv(file_path)
