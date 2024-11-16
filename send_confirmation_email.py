@@ -143,6 +143,10 @@ def send_email_with_attachment(message_text : str, file_path_list : str):
 
 def make_readable_list(str_list : List[str]) -> str:
 
+    if len(str_list) == 0:
+        return 'None'
+    elif len(str_list) == 1:
+        return str_list[0]
     if len(str_list) == 2:
         return str_list[0] + " and " + str_list[1]
     else:
