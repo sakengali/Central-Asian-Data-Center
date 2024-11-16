@@ -66,10 +66,8 @@ def clean_main()-> None:
         level_0_folder = get_level_0_folder(country)
 
         try:
-            if country == "KZ":
-                clean_level = "Level 2"
-            else:
-                clean_level = "Level 1"
+
+            clean_level = "Level 2" if country in ["KZ", "KG"] else "Level 1"
 
             print(f"Applying {clean_level} cleaning for {country}...")
 

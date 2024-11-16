@@ -17,9 +17,9 @@ country_names = {
     'UZ': 'Uzbekistan'
 }
 
-get_level_0_folder = lambda country : "Level 0h" if country == "KZ" else "Level 0"
+get_level_0_folder = lambda country : "Level 0h" if country in ["KZ", "KG"] else "Level 0"
 
-get_level_1_folder = lambda country : "Level 2" if country == "KZ" else "Level 1"
+get_level_1_folder = lambda country : "Level 2" if country in ["KZ", "KG"] else "Level 1"
 
 def get_date_folder_name() -> str:
     """ returns date folder name"""
@@ -42,7 +42,7 @@ class Sensor(NamedTuple):
     updates : List
 
     def get_level_0_folder(self):
-        return "Level 0h" if self.country == "KZ" else "Level 0"
+        return "Level 0h" if self.country in ["KZ", "KG"] else "Level 0"
 
     def is_responding(self):
         sensor_file_name = f"{self.name}-{date_folder_name[:8]}.csv"

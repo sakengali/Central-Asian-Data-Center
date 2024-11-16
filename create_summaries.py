@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 from helpers import get_date_folder_name, get_sensors_info
 from helpers import country_names, cwd, get_level_0_folder, get_level_1_folder
 from create_uptime_pdf import calculate_uptime
+import seaborn as sns
 
 #getting the correct path to this directory
 BASE_DIR: str = cwd
@@ -22,7 +23,6 @@ BASE_DIR: str = cwd
 gc = gspread.service_account(filename='./cosmic-talent-416001-3c711f8ccf2e.json')
 
 date_folder_name: str = get_date_folder_name()
-
 
 def get_period() -> str:
     today = datetime.today()
