@@ -22,11 +22,11 @@ get_level_0_folder = lambda country : "Level 0h" if country in ["KZ", "KG"] else
 get_level_1_folder = lambda country : "Level 2" if country in ["KZ", "KG"] else "Level 1"
 
 def get_date_folder_name() -> str:
-    """ returns date folder name"""
+    """ returns date folder name """
 
     this_month = pd.Timestamp.today().strftime("%b-%Y")
     month_part = '1' if pd.Timestamp.today().day <= 15 else '2'
-    return f"{this_month}-{month_part}" # if "dhawal" in os.getcwd() else "Oct-2024-2"
+    return f"{this_month}-{month_part}" if "dhawal" in os.getcwd() else "Nov-2024-2"
 
 date_folder_name : str = get_date_folder_name()
 

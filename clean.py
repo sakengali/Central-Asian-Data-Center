@@ -83,7 +83,7 @@ def clean_main()-> None:
                     for sensor in t:
                         t.set_description(sensor)
                         df: pd.DataFrame = pd.read_csv(f"{BASE_DIR}/Central Asian Data/{country}/{level_0_folder}/{date_folder_name}/{sensor_type}/{sensor}")
-                        if df.empty:
+                        if df.shape[0] <= 2 :
                             continue
                         else:
                             filter_table(df, clean_level, country, sensor_type, sensor)

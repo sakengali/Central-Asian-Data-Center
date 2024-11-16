@@ -44,6 +44,10 @@ def preprocess(df : pd.DataFrame) -> int:
     df["Timestamp"] = pd.to_datetime(df['Timestamp'], format='%Y-%m-%dT%H:%M:%SZ')
     first_hour = df.loc[1,"Timestamp"].hour
 
+    #if sensor has data only for one hour, uptime is 0
+    if len(df)<2:
+        return 0
+
     # Drop rows until the first hour of the day
     i = 2
     while True:
@@ -51,10 +55,6 @@ def preprocess(df : pd.DataFrame) -> int:
             df = df.drop(range(1,i), axis=0)
             break
         i+=1
-
-    #if sensor has data only for one hour, uptime is 0
-    if len(df)<2:
-        return 0
     
     start_time = df.loc[df.index[0],['Timestamp']].item()
     second_time = df.loc[df.index[1],['Timestamp']].item()

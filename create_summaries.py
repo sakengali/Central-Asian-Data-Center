@@ -13,12 +13,20 @@ from io import BytesIO
 from typing import List, Tuple, Dict
 from datetime import datetime, timedelta
 from helpers import get_date_folder_name, get_sensors_info
-from helpers import country_names, cwd, get_level_0_folder, get_level_1_folder
+from helpers import country_names, cwd, get_level_0_folder, get_level_1_folder, get_sensors_info, Sensor
 from create_uptime_pdf import calculate_uptime
 import seaborn as sns
+import sys
+from collections import defaultdict
 
 #getting the correct path to this directory
 BASE_DIR: str = cwd
+
+colors = sns.color_palette(palette="deep", n_colors=10)
+
+sensors = defaultdict()
+for country in ['KZ', 'KG', 'UZ']:
+    sensors[country] = get_sensors_info(country)
 
 gc = gspread.service_account(filename='./cosmic-talent-416001-3c711f8ccf2e.json')
 
@@ -43,7 +51,7 @@ def create_graphs(df: pd.DataFrame, sensor: str, measuring: str) -> str:
     
     plt.ylabel(measuring, fontsize=18)
     plt.title(f'{measuring}', fontsize=20, fontweight='bold')
-    plt.grid(True)
+    plt.grid(True, axis='x', linestyle='--', linewidth=0.5)
 
     plt.gca().xaxis.set_major_locator(DayLocator())
     date_format = DateFormatter("%d")
@@ -72,25 +80,57 @@ def create_graphs(df: pd.DataFrame, sensor: str, measuring: str) -> str:
     return f"data:image/png;base64,{img_base64}"
 
 
-def summary(data: List[Dict[str, pd.DataFrame]], measuring: str, freq: str = 'h') -> str:
+def summary(data: List[Dict[str, pd.DataFrame]], measuring: str, country : str, freq: str = 'h') -> str:
     plt.figure(figsize=(18, 6))
 
-    for i, d in enumerate(data):
-        for sensor_name, df in d.items():
-            # print(sensor_name)
-            df = df.copy()
-            if df.empty:
-                continue
-            
-            df['Timestamp'] = pd.to_datetime(df['Timestamp'])
-            df.set_index('Timestamp', inplace=True)
-            df_resampled = df.resample(freq).mean().reset_index()
+    cities = []
+    for _, d in enumerate(data):
+        for sensor_name, _ in d.items():
+            cities.append(sensors[country][sensor_name].city)
+    cities = list(set(cities))
+    if len(cities) > 1 and cities[0] == '':
+        del cities[0]
+        cities.append('')
+    data_city = {city: pd.DataFrame() for city in cities}
+    city_colors = {city: colors[i] for i, city in enumerate(cities)}
 
-            plt.plot(df_resampled['Timestamp'], df_resampled[measuring], label=f'{sensor_name}')
+    #create an empty df
+    #df_all = pd.DataFrame()
+    #print(cities)
+    for city in cities:
+        for _, d in enumerate(data):
+            for sensor_name, df in d.items():
+                
+                if sensors[country][sensor_name].city == city:
+                    df = df.copy()
+                    if df.empty:
+                        continue
+                    
+                    df['Timestamp'] = pd.to_datetime(df['Timestamp'])
+                    df.set_index('Timestamp', inplace=True)
+                    df_resampled = df.resample(freq).mean().reset_index()
+                    df_resampled['Timestamp'] = df_resampled['Timestamp'].dt.tz_localize(None)
+
+                    data_city[city] = pd.concat([data_city[city], df_resampled], axis=0, ignore_index=True)
+                    data_city[city].to_csv(f"{BASE_DIR}/test/df_all_test.csv")
+
+                #plt.plot(df_resampled['Timestamp'], df_resampled[measuring], label=f'{sensor_name}')
     
+    for city, df in data_city.items():
+        foo = False
+        if city == '':
+            foo = True
+            if len(cities) == 1:
+                city = 'all'
+            else:
+                city = 'other'
+
+        sns.lineplot(data=df, x='Timestamp', y=measuring, errorbar='sd', marker='.', markersize=10, label = city, color=city_colors[''] if foo else city_colors[city])
+
+    plt.xlabel('Date', fontsize=18)
     plt.ylabel(measuring, fontsize=18)
     plt.title(f'{measuring}', fontsize=20, fontweight='bold')
-    plt.grid(True)
+    plt.grid(True, axis='x', linestyle='--', linewidth=0.5)
     plt.gca().xaxis.set_major_locator(DayLocator())
     date_format = DateFormatter("%d")
     plt.gca().xaxis.set_major_formatter(date_format)
@@ -177,15 +217,15 @@ def get_data(country: str) -> Tuple[
     summary_outdoor_data_sorted = sorted(summary_outdoor_data, key=lambda x: (len(list(x.keys())[0]), list(x.keys())[0]))
 
     summary_indoor : Dict[str, str] = {
-        'PM 2.5': summary(summary_indoor_data_sorted, 'PM 2.5'),
-        'RH': summary(summary_indoor_data_sorted, 'Relative Humidity'),
-        'Temperture': summary(summary_indoor_data_sorted, 'Temperature'),
-        'CO2': summary(summary_indoor_data_sorted, 'CO2')
+        'PM 2.5': summary(summary_indoor_data_sorted, 'PM 2.5', country),
+        'RH': summary(summary_indoor_data_sorted, 'Relative Humidity', country),
+        'Temperture': summary(summary_indoor_data_sorted, 'Temperature', country),
+        'CO2': summary(summary_indoor_data_sorted, 'CO2', country)
     }
     summary_outdoor : Dict[str, str] = {
-        'PM 2.5': summary(summary_outdoor_data_sorted, 'PM 2.5'),
-        'RH': summary(summary_outdoor_data_sorted, 'Relative Humidity'),
-        'Temperture': summary(summary_outdoor_data_sorted, 'Temperature')
+        'PM 2.5': summary(summary_outdoor_data_sorted, 'PM 2.5', country),
+        'RH': summary(summary_outdoor_data_sorted, 'Relative Humidity', country),
+        'Temperture': summary(summary_outdoor_data_sorted, 'Temperature', country)
     }
     
     return data_indoor_sorted, data_outdoor_sorted, summary_indoor, summary_outdoor
