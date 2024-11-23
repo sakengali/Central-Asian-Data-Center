@@ -12,6 +12,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email import encoders
+from monitor_sensors import monitor
 
 from helpers import get_sensors_info, date_folder_name, cwd, get_level_0_folder
 
@@ -180,24 +181,25 @@ def send_email_main(is_successful : bool = True, error : str = ''):
             #file_path_list.append(f"{cwd}/Central Asian Data/{cnt}/{level_folder}/{date_folder_name}/{cnt.lower()}_summary.pdf")
 
         message_text = f"""
-            <p>Dear Members of the NU Air Quality Project</p>
+            <p>Dear Members of the Air Quality Project</p>
 
             <p>Please be informed that the data for Air Quality Sensors in Kazakhstan, Kyrgyzstan and Uzbekistan were downloaded for the period of {day1} and {day2}. All the data are available at the <a href="https://drive.google.com/drive/folders/12YDIO1ya_bIxyFifYfnBq7dU-64WoqjX?usp=sharing"> NU Data Center</a>.</p>
             
             <p></p>
 
-            <p>WARNING: There are some sensors that are deployed but not sending any data. <br>For Kazakhstan: {get_list_off_sensors('KZ')} </p>
+            <p>WARNING: {monitor()} </p>
             
-            <p>Best,</p>
+            <p>Best, AQ</p>
+
         """    
         send_email_with_attachment(message_text=message_text, file_path_list=file_path_list)
     else:
         message_text = f"""
-            <p>Dear Members of the NU Air Quality Project</p>
+            <p>Dear Members of the Air Quality Project</p>
 
             <p>Please be informed that the data for Air Quality Sensors in Kazakhstan, Kyrgyzstan and Uzbekistan <b> were failed to download </b> for the period of {day1} and {day2}.<br> The error is <i>{error}</i>.</p>
 
-            <p>Best,</p>
+            <p>Best, AQ</p>
         """
 
         send_email(message_text=message_text)

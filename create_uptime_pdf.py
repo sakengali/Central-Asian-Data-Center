@@ -248,7 +248,7 @@ def create_uptime_graph() -> None:
                 daily_uptime_df = create_daily_uptime_table(f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}")
                 daily_uptime_html.append(daily_uptime_df.to_html(classes='centered-table'))
 
-                for sensor in os.listdir(f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}"):
+                for sensor in sorted(os.listdir(f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}"), key=lambda x: int(re.search(r'\d+', x).group(0))):
                     match = re.match(r'([A-Za-z0-9-]+)-\w+-\d{4}', sensor)
                     if match:
                         sensor_name = match.group(1)

@@ -231,12 +231,24 @@ def upload_uptime_file(creds, country : str, date_folder_id : str):
 
     return None
 
+def upload_status_db_file(creds, base_folder_id : str):
+    """
+    uploads sensor_status_db.csv file to the base folder
+    """
+
+    os.chdir(f"{cwd}/Central Asian Data/")
+    upload_file_to_folder(creds, "sensor_status_db.csv", parent_folder_ids=[base_folder_id])
+
+    return None
+
 def main_upload():
     creds = get_credentials()
 
     # create date and indoor/outdoor folders
     level_0_date_folder_ids, level_0_folder_ids = create_folders(creds, level='0')
     level_1_date_folder_ids, level_1_folder_ids = create_folders(creds, level='1')
+
+    base_folder_id = "12YDIO1ya_bIxyFifYfnBq7dU-64WoqjX"
 
     # upload
     for country in ['KZ', 'KG', 'UZ']:
@@ -258,6 +270,8 @@ def main_upload():
             # upload summary.pdf
             print(f'Uploading {country.lower()}_summary.pdf file')
             upload_summary_file(creds, country, level_1_date_folder_ids[country])
+
+            print(f'Finished uploading data for {country}')
             
         except FileNotFoundError as e:
             print(f"Couldn't upload data for {country}. Error: {e}")

@@ -26,7 +26,7 @@ def get_date_folder_name() -> str:
 
     this_month = pd.Timestamp.today().strftime("%b-%Y")
     month_part = '1' if pd.Timestamp.today().day <= 15 else '2'
-    return f"{this_month}-{month_part}" if "dhawal" in os.getcwd() else "Nov-2024-2"
+    return f"{this_month}-{month_part}" if "dhawal" in os.getcwd() else "Nov-2024-1"
 
 date_folder_name : str = get_date_folder_name()
 
@@ -44,14 +44,22 @@ class Sensor(NamedTuple):
     def get_level_0_folder(self):
         return "Level 0h" if self.country in ["KZ", "KG"] else "Level 0"
 
-    def is_responding(self):
+    def get_status(self):
+
+        """
+        returns 0 if sensor is not responding, 1 if sensor is responding, 2 if sensor is returning only 0 values
+        """
+
         sensor_file_name = f"{self.name}-{date_folder_name[:8]}.csv"
         df = pd.read_csv(f"{cwd}/Central Asian Data/{self.country}/{self.get_level_0_folder()}/{date_folder_name}/{self.sensor_type}/{sensor_file_name}")
 
-        return not df.empty
+        if all(df['PM 2.5'] == 0):
+            return 2
+
+        return int(not df.empty)
 
     def is_turned_off(self):
-        return self.is_deployed and not self.is_responding()
+        return self.is_deployed and not self.get_status()
 
 
 def get_sensors_info(country : str) -> List[Sensor]:
@@ -92,7 +100,7 @@ def get_sensors_info(country : str) -> List[Sensor]:
 def sensor_line_v1(sensor : Sensor) -> str:
     sensor_name = sensor.name
     status = "Deployed    " if sensor.is_deployed else "Not Deployed"
-    response = "Responding" if sensor.is_responding() else "Not Responding"
+    response = "Responding" if sensor.get_status() else "Not Responding"
     location = sensor.location if sensor.is_deployed else "None"
     location_length = len(location)
     

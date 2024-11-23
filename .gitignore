@@ -6,3 +6,4 @@ credentials/
 sensors_info/
 __pycache__/
 cosmic-talent-416001-3c711f8ccf2e.json
+sensor_status_db.csv
