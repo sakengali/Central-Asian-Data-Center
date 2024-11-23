@@ -6,6 +6,7 @@ from create_summaries import create_summary_pdf
 from create_uptime_pdf import create_uptime_graph
 import pandas as pd
 from clean import clean_main
+from monitor_sensors import monitor
 
 # today's day and month
 month = pd.Timestamp.today().month
@@ -34,6 +35,7 @@ def main():
                 download_data()
                 clean_main()
                 create_info_file()
+                monitor()
                 create_uptime_graph()
                 create_summary_pdf()
                 upload_data()
@@ -46,6 +48,7 @@ def main():
                 download_data()
                 clean_main()
                 create_info_file()
+                monitor()
                 create_uptime_graph()
                 create_summary_pdf()
                 upload_data()
