@@ -55,6 +55,7 @@ def main():
                 send_email_main()
             except Exception as error:
                 send_email_main(is_successful=False, error=error)
+                print(error)
 
 if __name__ == "__main__":
     main()

@@ -4,13 +4,14 @@ import pandas as pd
 import os
 from datetime import datetime
 from typing import List, Dict, Optional, Set
-from helpers import Sensor, get_sensors_info, get_date_folder_name, get_level_0_folder
+from helpers import Sensor, get_sensors_info, get_date_folder_name, get_level_0_folder, sensors_info
 
 def update_responding_status(sensors: List[Sensor], date: str, database_path: str) -> None:
     """
     Input: result of get_sensors_info transformed into a list of Sensor objects, date, path where .csv file is stored
     Updates the sensors status database with current session data
     """
+
     data = []
     for sensor in sensors:
         data.append({
@@ -70,6 +71,8 @@ def monitor(write_to_info : bool = True) -> None:
     """
     Main calling function
     """
+
+    print("updating sensor status monitoring database")
     
     database_path : str = "sensor_status_db.csv"
     current_date : str = get_date_folder_name()
@@ -77,13 +80,15 @@ def monitor(write_to_info : bool = True) -> None:
     line : str = ""
 
     for country in ['KZ']: #for now only KZ, KG and UZ will need to fill the tables
-        sensors_dict = get_sensors_info(country)
+        sensors_dict = sensors_info[country]
         sensors = list(sensors_dict.values())
         sensors = sorted(sensors, key=lambda x: x.name)
 
         update_responding_status(sensors, current_date, database_path)
         
-        off_twice.update(get_sensors_off_twice(database_path, current_date))
+        temp_set = get_sensors_off_twice(database_path, current_date)
+        if temp_set:
+            off_twice.update(temp_set)
 
     if off_twice:
         line = "Sensors that are off for two consecutive sessions: " + ", ".join(off_twice) + "."

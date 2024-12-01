@@ -14,7 +14,7 @@ from email.mime.text import MIMEText
 from email import encoders
 from monitor_sensors import monitor
 
-from helpers import get_sensors_info, date_folder_name, cwd, get_level_0_folder
+from helpers import get_sensors_info, date_folder_name, cwd, get_level_0_folder, cwd
 
 import socket
 timeout_in_sec = 60*5 # 3 minutes timeout limit
@@ -166,6 +166,8 @@ def send_email_main(is_successful : bool = True, error : str = ''):
     """Send the email to the recipients"""
 
     print("Sending confirmation email...")
+
+    os.chdir(cwd)
 
     day1 = pd.Timestamp.today() - pd.Timedelta(days=16); day1 = day1.strftime("%d-%b-%Y")
     day2 = pd.Timestamp.today().strftime("%d-%b-%Y")

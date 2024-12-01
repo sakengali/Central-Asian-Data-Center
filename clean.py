@@ -67,7 +67,7 @@ def clean_main()-> None:
 
         try:
 
-            clean_level = "Level 2" if country in ["KZ", "KG"] else "Level 1"
+            clean_level = "Level 2"
 
             print(f"Applying {clean_level} cleaning for {country}...")
 

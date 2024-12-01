@@ -13,7 +13,7 @@ from io import BytesIO
 from typing import List, Tuple, Dict
 from datetime import datetime, timedelta
 from helpers import get_date_folder_name, get_sensors_info
-from helpers import country_names, cwd, get_level_0_folder, get_level_1_folder, get_sensors_info, Sensor
+from helpers import country_names, cwd, get_level_0_folder, get_level_1_folder, get_sensors_info, Sensor, sensors_info
 from create_uptime_pdf import calculate_uptime
 import seaborn as sns
 import sys
@@ -24,11 +24,7 @@ BASE_DIR: str = cwd
 
 colors = sns.color_palette(palette="deep", n_colors=10)
 
-sensors = defaultdict()
-for country in ['KZ', 'KG', 'UZ']:
-    sensors[country] = get_sensors_info(country)
-
-gc = gspread.service_account(filename='./cosmic-talent-416001-3c711f8ccf2e.json')
+# gc = gspread.service_account(filename=f'{cwd}/cosmic-talent-416001-3c711f8ccf2e.json')
 
 date_folder_name: str = get_date_folder_name()
 
@@ -86,7 +82,7 @@ def summary(data: List[Dict[str, pd.DataFrame]], measuring: str, country : str, 
     cities = []
     for _, d in enumerate(data):
         for sensor_name, _ in d.items():
-            cities.append(sensors[country][sensor_name].city)
+            cities.append(sensors_info[country][sensor_name].city)
     cities = list(set(cities))
     if len(cities) > 1 and cities[0] == '':
         del cities[0]
@@ -101,7 +97,7 @@ def summary(data: List[Dict[str, pd.DataFrame]], measuring: str, country : str, 
         for _, d in enumerate(data):
             for sensor_name, df in d.items():
                 
-                if sensors[country][sensor_name].city == city:
+                if sensors_info[country][sensor_name].city == city:
                     df = df.copy()
                     if df.empty:
                         continue

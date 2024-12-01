@@ -8,18 +8,15 @@ import json
 
 cwd : str = "/home/dhawal/Air Quality Analysis Central Asia/Central-Asian-Data-Center" if "dhawal" in os.getcwd() else os.getcwd()
 
-#service account to obtain information from google spreadsheets
-gc = gspread.service_account(filename=f'{cwd}/cosmic-talent-416001-3c711f8ccf2e.json')
-
 country_names = {
     'KZ': 'Kazakhstan',
     'KG': 'Kyrgyzstan',
     'UZ': 'Uzbekistan'
 }
 
-get_level_0_folder = lambda country : "Level 0h" if country in ["KZ", "KG"] else "Level 0"
+get_level_0_folder = lambda country : "Level 0h"
 
-get_level_1_folder = lambda country : "Level 2" if country in ["KZ", "KG"] else "Level 1"
+get_level_1_folder = lambda country : "Level 2"
 
 def get_date_folder_name() -> str:
     """ returns date folder name """
@@ -42,8 +39,22 @@ class Sensor(NamedTuple):
     updates : List
 
     def get_level_0_folder(self):
-        return "Level 0h" if self.country in ["KZ", "KG"] else "Level 0"
+        return "Level 0h"
 
+    def is_responding(self):
+
+        """
+        returns 0 if sensor is not responding, 1 if sensor is responding
+        """
+
+        sensor_file_name = f"{self.name}-{date_folder_name[:8]}.csv"
+        df = pd.read_csv(f"{cwd}/Central Asian Data/{self.country}/{self.get_level_0_folder()}/{date_folder_name}/{self.sensor_type}/{sensor_file_name}")
+
+        #if all(df['PM 2.5'] == 0):
+        #    return 2
+
+        return not df.empty
+    
     def get_status(self):
 
         """
@@ -53,13 +64,13 @@ class Sensor(NamedTuple):
         sensor_file_name = f"{self.name}-{date_folder_name[:8]}.csv"
         df = pd.read_csv(f"{cwd}/Central Asian Data/{self.country}/{self.get_level_0_folder()}/{date_folder_name}/{self.sensor_type}/{sensor_file_name}")
 
-        if all(df['PM 2.5'] == 0):
+        if not df.empty and all(df['PM 2.5'] == 0):
             return 2
 
-        return int(not df.empty)
+        return not df.empty
 
     def is_turned_off(self):
-        return self.is_deployed and not self.get_status()
+        return self.is_deployed and not self.is_responding()
 
 
 def get_sensors_info(country : str) -> List[Sensor]:
@@ -68,6 +79,9 @@ def get_sensors_info(country : str) -> List[Sensor]:
         inputs: country 
         returns a Dict[sensor_name : sensor_info] for country's sensors
     """
+
+    #service account to obtain information from google spreadsheets
+    gc = gspread.service_account(filename=f'{cwd}/cosmic-talent-416001-3c711f8ccf2e.json')
 
     sensors : Dict[str, Sensor] = {}
     
@@ -96,11 +110,16 @@ def get_sensors_info(country : str) -> List[Sensor]:
     
     return sensors
 
+sensors_info = {
+    "KZ" : get_sensors_info("KZ"),
+    "KG" : get_sensors_info("KG"),
+    "UZ" : get_sensors_info("UZ")
+}
 
 def sensor_line_v1(sensor : Sensor) -> str:
     sensor_name = sensor.name
     status = "Deployed    " if sensor.is_deployed else "Not Deployed"
-    response = "Responding" if sensor.get_status() else "Not Responding"
+    response = "Responding" if sensor.is_responding() else "Not Responding"
     location = sensor.location if sensor.is_deployed else "None"
     location_length = len(location)
     
@@ -143,7 +162,7 @@ def create_info_file():
             
             #information for updated info file version is available only for KZ
             if country == 'KZ': 
-                sensors = get_sensors_info(country)
+                sensors = sensors_info[country]
                 for sensor_type in ['Indoor Sensors', 'Outdoor Sensors']:
                     with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_info.txt", 'a') as f:
                         f.write(f"\n({sensor_type}):\n")
