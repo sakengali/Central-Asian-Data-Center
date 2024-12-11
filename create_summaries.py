@@ -298,7 +298,7 @@ def get_data(country: str) -> Tuple[
 
 def create_summary_pdf() -> None:
 
-    for country in ['KZ' 'KG', 'UZ']:
+    for country in ['KZ', 'KG', 'UZ']:
 
         level_folder = get_level_1_folder(country)
 
