@@ -54,6 +54,10 @@ def create_graphs(df: pd.DataFrame, sensor: str, measuring: str) -> str:
     plt.gca().xaxis.set_major_formatter(date_format)
     
     if measuring in ['PM 2.5', 'CO2'] and df_resampled[measuring].max() > df_resampled[measuring].mean() * 2:
+        if measuring == 'PM 2.5':
+            plt.ylim(bottom=1)
+        # elif measuring == 'CO2':
+        #     plt.ylim(top=400)
         def custom_yscale(y, pos):
             if y > 1:
                 return f'{y:.0f}'
@@ -108,6 +112,8 @@ def summary(data: List[Dict[str, pd.DataFrame]], measuring: str, country : str, 
                     df_resampled['Timestamp'] = df_resampled['Timestamp'].dt.tz_localize(None)
 
                     data_city[city] = pd.concat([data_city[city], df_resampled], axis=0, ignore_index=True)
+                    if not os.path.exists(f"{BASE_DIR}/test"):
+                        os.makedirs(f"{BASE_DIR}/test")
                     data_city[city].to_csv(f"{BASE_DIR}/test/df_all_test.csv")
 
                 #plt.plot(df_resampled['Timestamp'], df_resampled[measuring], label=f'{sensor_name}')
@@ -132,6 +138,10 @@ def summary(data: List[Dict[str, pd.DataFrame]], measuring: str, country : str, 
     plt.gca().xaxis.set_major_formatter(date_format)
 
     if measuring in ['PM 2.5', 'CO2'] and df_resampled[measuring].max() > df_resampled[measuring].mean() * 2:
+        if measuring == 'PM 2.5':
+            plt.ylim(bottom=1)
+        elif measuring == 'CO2':
+            plt.ylim(bottom=400)
         def custom_yscale(y, pos):
             if y > 1:
                 return f'{y:.0f}'
@@ -151,6 +161,65 @@ def summary(data: List[Dict[str, pd.DataFrame]], measuring: str, country : str, 
     plt.close()
     buf.seek(0)
     
+    img_base64 = base64.b64encode(buf.read()).decode('utf-8')
+    return f"data:image/png;base64,{img_base64}"
+
+def summary_in(data: List[Dict[str, pd.DataFrame]], measuring: str, country: str, freq: str = 'h') -> str:
+    country = country.lower()
+    plt.figure(figsize=(18, 6))
+    combined_df = pd.DataFrame()
+
+    for _, d in enumerate(data):
+        for sensor_name, df in d.items():
+            if df.empty:
+                continue
+            df = df.copy()
+            df['Timestamp'] = pd.to_datetime(df['Timestamp'])
+            df.set_index('Timestamp', inplace=True)
+            df_resampled = df.resample(freq).mean().reset_index()
+            combined_df = pd.concat([combined_df, df_resampled], axis=0, ignore_index=True)
+
+    if combined_df.empty:
+        return ""
+
+    sns.lineplot(
+        data=combined_df,
+        x='Timestamp',
+        y=measuring,
+        errorbar='sd',
+        estimator='mean',
+        marker='.',
+        markersize=10
+    )
+
+    plt.xlabel('Date', fontsize=18)
+    plt.ylabel(measuring, fontsize=18)
+    plt.title(f'{measuring}', fontsize=20, fontweight='bold')
+    plt.grid(True, axis='x', linestyle='--', linewidth=0.5)
+    plt.gca().xaxis.set_major_locator(DayLocator())
+    date_format = DateFormatter("%d")
+    plt.gca().xaxis.set_major_formatter(date_format)
+
+    if measuring in ['PM 2.5', 'CO2'] and combined_df[measuring].max() > combined_df[measuring].mean() * 2:
+        if measuring == 'PM 2.5':
+            plt.ylim(bottom=1)
+        elif measuring == 'CO2':
+            plt.ylim(bottom=400)
+
+        def custom_yscale(y, pos):
+            return f'{y:.0f}' if y > 1 else f'{y:.2f}'
+
+        plt.yscale('log', base=2)
+        plt.gca().yaxis.set_major_formatter(FuncFormatter(custom_yscale))
+
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
+    plt.tight_layout()
+
+    buf = BytesIO()
+    plt.savefig(buf, format='png')
+    plt.close()
+    buf.seek(0)
     img_base64 = base64.b64encode(buf.read()).decode('utf-8')
     return f"data:image/png;base64,{img_base64}"
 
@@ -213,10 +282,10 @@ def get_data(country: str) -> Tuple[
     summary_outdoor_data_sorted = sorted(summary_outdoor_data, key=lambda x: (len(list(x.keys())[0]), list(x.keys())[0]))
 
     summary_indoor : Dict[str, str] = {
-        'PM 2.5': summary(summary_indoor_data_sorted, 'PM 2.5', country),
-        'RH': summary(summary_indoor_data_sorted, 'Relative Humidity', country),
-        'Temperture': summary(summary_indoor_data_sorted, 'Temperature', country),
-        'CO2': summary(summary_indoor_data_sorted, 'CO2', country)
+        'PM 2.5': summary_in(summary_indoor_data_sorted, 'PM 2.5', country),
+        'RH': summary_in(summary_indoor_data_sorted, 'Relative Humidity', country),
+        'Temperture': summary_in(summary_indoor_data_sorted, 'Temperature', country),
+        'CO2': summary_in(summary_indoor_data_sorted, 'CO2', country)
     }
     summary_outdoor : Dict[str, str] = {
         'PM 2.5': summary(summary_outdoor_data_sorted, 'PM 2.5', country),
@@ -229,7 +298,7 @@ def get_data(country: str) -> Tuple[
 
 def create_summary_pdf() -> None:
 
-    for country in ['KZ', 'KG', 'UZ']:
+    for country in ['KZ']:#, 'KG', 'UZ']:
 
         level_folder = get_level_1_folder(country)
 

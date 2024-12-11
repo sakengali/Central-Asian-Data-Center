@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from typing import List, Tuple, Dict
 from datetime import datetime, timedelta
 from helpers import get_date_folder_name
-from helpers import country_names, cwd, get_level_0_folder
+from helpers import country_names, cwd, get_level_0_folder, get_sensors_info, Sensor
 
 BASE_DIR: str = cwd
 
@@ -101,7 +101,7 @@ def preprocess(df : pd.DataFrame) -> int:
 def calculate_uptime(country : str) -> Dict[str, float]:
 
     level_folder = get_level_0_folder(country)
-
+    sensors = get_sensors_info(country)
     uptimes: Dict = {}
     try:
         for sensor_type in ['Indoor Sensors', 'Outdoor Sensors']:
@@ -113,6 +113,8 @@ def calculate_uptime(country : str) -> Dict[str, float]:
                     sensor_name = sensor.split('-')[0]
                 df: pd.DataFrame = pd.read_csv(f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}/{sensor}")
                 if df.empty:
+                    if sensors[sensor_name].is_deployed:
+                        uptimes[sensor_name] = 0
                     continue
                 else:
                     uptimes[sensor_name] = preprocess(df)
@@ -234,7 +236,7 @@ def create_daily_uptime_table(path: str) -> pd.DataFrame:
 def create_uptime_graph() -> None:
     
     for country in ['KZ', 'KG', 'UZ']:
-
+        sensors = get_sensors_info(country)
         level_folder = get_level_0_folder(country)
 
         #html for daily uptime
@@ -256,6 +258,8 @@ def create_uptime_graph() -> None:
                         sensor_name = sensor.split('-')[0]
                     df: pd.DataFrame = pd.read_csv(f"{BASE_DIR}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{sensor_type}/{sensor}")
                     if df.empty:
+                        if sensors[sensor_name].is_deployed:
+                            uptimes[sensor_name] = 0
                         continue
                     else:
                         uptimes[sensor_name] = preprocess(df)
