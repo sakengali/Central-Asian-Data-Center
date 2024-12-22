@@ -154,6 +154,7 @@ def create_info_file():
         level_folder = get_level_0_folder(country)
 
         try:
+            print(f"creating info file for {country}...")
             with open(f"{cwd}/Central Asian Data/{country}/{level_folder}/{date_folder_name}/{country.lower()}_info.txt", 'w') as f:
                 f.write(f"The data of {country} sensors was downloaded on {datetime.now()}\n\n")
                 f.write(f"Date Folder Name: {date_folder_name}\n\n")
