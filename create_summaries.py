@@ -81,7 +81,6 @@ def create_graphs(df: pd.DataFrame, sensor: str, measuring: str) -> str:
 
 
 def summary(data: List[Dict[str, pd.DataFrame]], measuring: str, country : str, freq: str = 'h') -> str:
-    plt.figure(figsize=(18, 6))
 
     cities = []
     for _, d in enumerate(data):
@@ -112,13 +111,16 @@ def summary(data: List[Dict[str, pd.DataFrame]], measuring: str, country : str, 
                     df_resampled['Timestamp'] = df_resampled['Timestamp'].dt.tz_localize(None)
 
                     data_city[city] = pd.concat([data_city[city], df_resampled], axis=0, ignore_index=True)
-                    if not os.path.exists(f"{BASE_DIR}/test"):
-                        os.makedirs(f"{BASE_DIR}/test")
-                    data_city[city].to_csv(f"{BASE_DIR}/test/df_all_test.csv")
+                    #if not os.path.exists(f"{BASE_DIR}/test"):
+                    #    os.makedirs(f"{BASE_DIR}/test")
+                    #data_city[city].to_csv(f"{BASE_DIR}/test/df_all_test.csv")
 
                 #plt.plot(df_resampled['Timestamp'], df_resampled[measuring], label=f'{sensor_name}')
     
+    imgs_of_plts = {}
     for city, df in data_city.items():
+        plt.figure(figsize=(18, 6))
+
         foo = False
         if city == '':
             foo = True
@@ -129,40 +131,42 @@ def summary(data: List[Dict[str, pd.DataFrame]], measuring: str, country : str, 
 
         sns.lineplot(data=df, x='Timestamp', y=measuring, errorbar='sd', marker='.', markersize=10, label = city, color=city_colors[''] if foo else city_colors[city])
 
-    plt.xlabel('Date', fontsize=18)
-    plt.ylabel(measuring, fontsize=18)
-    plt.title(f'{measuring}', fontsize=20, fontweight='bold')
-    plt.grid(True, axis='x', linestyle='--', linewidth=0.5)
-    plt.gca().xaxis.set_major_locator(DayLocator())
-    date_format = DateFormatter("%d")
-    plt.gca().xaxis.set_major_formatter(date_format)
+        plt.xlabel('Date', fontsize=18)
+        plt.ylabel(measuring, fontsize=18)
+        plt.title(f'{measuring}', fontsize=20, fontweight='bold')
+        plt.grid(True, axis='x', linestyle='--', linewidth=0.5)
+        plt.gca().xaxis.set_major_locator(DayLocator())
+        date_format = DateFormatter("%d")
+        plt.gca().xaxis.set_major_formatter(date_format)
 
-    if measuring in ['PM 2.5', 'CO2'] and df_resampled[measuring].max() > df_resampled[measuring].mean() * 2:
-        if measuring == 'PM 2.5':
-            plt.ylim(bottom=1)
-        elif measuring == 'CO2':
-            plt.ylim(bottom=400)
-        def custom_yscale(y, pos):
-            if y > 1:
-                return f'{y:.0f}'
-            else:
-                return f'{y:.2f}'
-        plt.yscale('log', base=2)
-        plt.gca().yaxis.set_major_formatter(FuncFormatter(custom_yscale))
+        if measuring in ['PM 2.5', 'CO2'] and df_resampled[measuring].max() > df_resampled[measuring].mean() * 2:
+            if measuring == 'PM 2.5':
+                plt.ylim(bottom=1)
+            elif measuring == 'CO2':
+                plt.ylim(bottom=400)
+            def custom_yscale(y, pos):
+                if y > 1:
+                    return f'{y:.0f}'
+                else:
+                    return f'{y:.2f}'
+            plt.yscale('log', base=2)
+            plt.gca().yaxis.set_major_formatter(FuncFormatter(custom_yscale))
 
 
-    plt.xticks(fontsize=16)
-    plt.yticks(fontsize=16)
-    plt.legend(fontsize=16, loc='center left', bbox_to_anchor=(1, 0.5))
-    plt.tight_layout()
+        plt.xticks(fontsize=16)
+        plt.yticks(fontsize=16)
+        plt.legend(fontsize=16, loc='center left', bbox_to_anchor=(1, 0.5))
+        plt.tight_layout()
 
-    buf = BytesIO()
-    plt.savefig(buf, format='png')
-    plt.close()
-    buf.seek(0)
+        buf = BytesIO()
+        plt.savefig(buf, format='png')
+        plt.close()
+        buf.seek(0)
     
-    img_base64 = base64.b64encode(buf.read()).decode('utf-8')
-    return f"data:image/png;base64,{img_base64}"
+        img_base64 = base64.b64encode(buf.read()).decode('utf-8')
+
+        imgs_of_plts[city] = f"data:image/png;base64,{img_base64}"
+    return imgs_of_plts
 
 def summary_in(data: List[Dict[str, pd.DataFrame]], measuring: str, country: str, freq: str = 'h') -> str:
     country = country.lower()
@@ -221,6 +225,7 @@ def summary_in(data: List[Dict[str, pd.DataFrame]], measuring: str, country: str
     plt.close()
     buf.seek(0)
     img_base64 = base64.b64encode(buf.read()).decode('utf-8')
+    
     return f"data:image/png;base64,{img_base64}"
 
 
@@ -333,16 +338,19 @@ def create_summary_pdf() -> None:
                 Date: {datetime.today().strftime("%m-%d-%Y")}<br><br>
                 Summary of Indoor Sensors:<br>
                 <div><img src="{summary_indoor['PM 2.5']}" width="950"></div>
-                <div><img src="{summary_indoor['RH']}" width="950"></div>
-                <div><img src="{summary_indoor['Temperture']}" width="950"></div>
                 <div><img src="{summary_indoor['CO2']}" width="950"></div>
             </div>
             <div class="page-break"></div>
             <div class='intro'>
-                <p>Summary of Outdoor Sensors:</p>
-                <div><img src="{summary_outdoor['PM 2.5']}" width="950"></div>
-                <div><img src="{summary_outdoor['RH']}" width="950"></div>
-                <div><img src="{summary_outdoor['Temperture']}" width="950"></div
+                <p>Summary of Outdoor Sensors:</p>"""
+            for city, plt in summary_outdoor['PM 2.5'].items():
+                html_content += f"""
+                    <div>
+                        <p><b>{city}</b></p>
+                        <img src="{plt}" width="950">
+                    </div>
+                """
+            html_content += f"""
             </div>
             <div class="page-break"></div>
             """
