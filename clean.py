@@ -37,7 +37,7 @@ def filter_table(df: pd.DataFrame, clean_level: str, country: str, sensor_type: 
     interval = (second_time - start_time).total_seconds()
 
     if interval <= 60:
-        threshold = 100
+        threshold = 500
     elif interval <= 900:
         threshold = 1000
     elif interval <= 3600:
